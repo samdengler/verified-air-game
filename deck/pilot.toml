@@ -1,0 +1,173 @@
+# One batch of review cards from Payment and the pilot rules.
+#
+# People write the wording here. Everything else comes from the verified-air
+# build: scripts/export_deck.py adds statuses, rule sentences, example results
+# and dependent counts, and stops if anything below no longer matches.
+#
+#   example    a Lean @[case] whose computed value backs the card
+#   requires   text that must appear in that value (whitespace is normalized)
+#   criterion  an acceptance criterion: its sentence and status are read from the build
+#   open       a theorem that must still be open
+#   decision   a blueprint card that must still need a decision
+#
+# Card rules the exporter enforces: at most 40 words for case and question
+# together, no model vocabulary on the card, and no em or en dashes.
+
+title = "Payment and the pilot rules"
+
+[[card]]
+id = "accept-at-expiry"
+kind = "predict"
+area = "Pilot rules"
+label = "Accepting an offer at its expiry"
+case = "An offer is valid until 12:00 UTC. The customer accepts it at exactly 12:00 UTC."
+question = "What happens?"
+example = "Rules.OfferOrder.acceptAtExpiry"
+requires = ["Except.error (Rules.OfferOrder.Rejection.expired)"]
+criterion = "OO-001.1"
+choices = [
+  { id = "rejected", label = "The offer is rejected as expired", model = true },
+  { id = "created", label = "An order is created" },
+]
+
+[[card]]
+id = "declined-card"
+kind = "predict"
+area = "Payment"
+label = "One method declined in a split payment"
+case = "A trip at 100.00 EUR and a bag at 40.00 EUR are paid in one payment. The settlement plan succeeds for 100.00 EUR. The card is declined for 40.00 EUR."
+question = "What happens?"
+example = "Rules.OneOrder.Payment.declinedCardForBag"
+requires = [
+  "payments := [Rules.OneOrder.Payment.PaymentStatus.failed]",
+  'item := "TRIP", paid := false',
+  'item := "BAG", paid := false',
+]
+criterion = "ONE-302.3"
+choices = [
+  { id = "whole-fails", label = "The whole payment fails, and neither is paid", model = true },
+  { id = "trip-paid", label = "The trip is paid, and the bag is not" },
+]
+
+[[card]]
+id = "refund-rule"
+kind = "confirm"
+area = "Pilot rules"
+label = "When a refund is accepted"
+case = "A refund is accepted only if it names the payment and its amount does not exceed that payment's amount."
+question = "Is that how refunds work?"
+criterion = "OO-003.1"
+on_yes = "Nothing in the model checks this rule yet, so your answer is the first evidence for it."
+on_no = "A modeller follows up with you for one short conversation. You don't need to write the correct rule."
+
+[[card]]
+id = "refund-limit"
+kind = "decide"
+area = "Pilot rules"
+label = "The limit on refunds"
+case = "A customer paid 100.00 USD. Two refunds of 60.00 USD are requested against that payment."
+question = "What limit applies?"
+open = "Rules.OfferOrder.refunds_le_payments"
+example = "Rules.OfferOrder.doubleRefund"
+requires = ["firstAccepted := true", "secondAccepted := true", "totalRefunded := { amount := 12000"]
+today = "As written today, the rule accepts both refunds: 120.00 USD back on 100.00 USD paid."
+choices = [
+  { id = "per-refund", label = "Each refund on its own", consequence = "The rule stays as written, and refunds can exceed what was paid." },
+  { id = "per-payment", label = "All refunds on the payment, together", consequence = "The second refund is refused. A modeller changes the rule, and Lean checks whether refunds then stay within payments." },
+  { id = "per-order", label = "All refunds on the order, together", consequence = "The second refund is refused, because this order's only payment is 100.00 USD. A modeller changes the rule, and Lean checks whether refunds then stay within payments." },
+]
+
+[[card]]
+id = "late-payment-check"
+kind = "seeded"
+area = "Payment"
+label = "A payment after the time limit"
+case = "A payment that arrives after an order item's payment time limit is accepted, as long as it covers the full price."
+question = "Is that how payments work?"
+criterion = "ONE-304.4"
+
+[[card]]
+id = "late-capture"
+kind = "decide"
+area = "Payment"
+label = "A card payment completed after removal"
+case = "An unpaid trip is removed at its payment time limit, and its pending card payment fails. One minute later the customer completes the card redirect, and the airline reports success."
+question = "What does the payment become?"
+open = "Rules.OneOrder.Payment.recordOutcome_settled_final"
+example = "Rules.OneOrder.Payment.lateRedirectCapture"
+requires = [
+  "paymentAtLimit := Rules.OneOrder.Payment.PaymentStatus.failed",
+  "underFinalReading := Rules.OneOrder.Payment.PaymentStatus.failed",
+  "underLateCaptureReading := Rules.OneOrder.Payment.PaymentStatus.successful",
+]
+choices = [
+  { id = "stays-failed", label = "It stays failed", consequence = "The model has already computed this answer. The next card shows you the result." },
+  { id = "becomes-successful", label = "It becomes successful", consequence = "The model has already computed this answer. The next card shows you the result." },
+]
+
+[[card]]
+id = "late-capture-result"
+kind = "followup"
+area = "Payment"
+label = "The result of your late payment answer"
+depends_on = "late-capture"
+question = "Is that right?"
+example = "Rules.OneOrder.Payment.lateRedirectCapture"
+requires = [
+  "tripAtLimit := [Rules.OneOrder.DeliveryStatus.removed, Rules.OneOrder.DeliveryStatus.removed]",
+  "tripAfterCapture := [Rules.OneOrder.DeliveryStatus.removed, Rules.OneOrder.DeliveryStatus.removed]",
+]
+on_yes = "Your answer and this result go to the area's owner together."
+on_no = "That is a finding: the rule needs another step. A modeller follows up with you."
+
+[card.variants]
+stays-failed = "Under your answer, the airline's late report changes nothing. The customer completed the redirect, the payment stays failed, and the flights stay removed."
+becomes-successful = "Under your answer, the payment becomes successful, and the flights stay removed. The customer has paid for nothing."
+
+[[card]]
+id = "removal-status"
+kind = "decide"
+area = "Payment"
+label = "The status of a removed item's services"
+case = "An unpaid trip at 100.00 EUR reaches its payment time limit, and the airline removes it."
+question = "Which delivery status do its services take?"
+open = "Rules.OneOrder.Payment.removed_item_holds_no_value"
+example = "Rules.OneOrder.Payment.removalStatuses"
+choices = [
+  { id = "removed", label = "REMOVED", consequence = "The trip is cancelled.", proven = "Rules.OneOrder.Payment.removed_item_holds_no_value_of_removed", requires = ["removedAs := Rules.OneOrder.DeliveryStatus.removed, cautious := [Rules.OneOrder.ItemStatus.cancelled], strict := [Rules.OneOrder.ItemStatus.cancelled]"] },
+  { id = "expired", label = "EXPIRED", consequence = "The result turns on one more open question: does an expired service hold value? If it does, the trip stays active and keeps its order opened. If it does not, the trip is cancelled.", requires = ["removedAs := Rules.OneOrder.DeliveryStatus.expired, cautious := [Rules.OneOrder.ItemStatus.active], strict := [Rules.OneOrder.ItemStatus.cancelled]"] },
+  { id = "hold-value", label = "REMOVED HOLD VALUE", consequence = "The trip stays active and keeps its order opened, because its services hold value.", requires = ["removedAs := Rules.OneOrder.DeliveryStatus.removedHoldValue, cautious := [Rules.OneOrder.ItemStatus.active], strict := [Rules.OneOrder.ItemStatus.active]"] },
+]
+
+[[card]]
+id = "expiry-drift"
+kind = "reconcile"
+area = "Pilot rules"
+label = "The rules and the code at expiry"
+case = "An offer is valid until 12:00 UTC, and the customer accepts it at exactly 12:00 UTC. The rules reject it. The code creates the order."
+question = "Which is right?"
+echoes = "accept-at-expiry"
+example = "Rules.OfferOrder.acceptAtExpiry"
+requires = ["Except.error (Rules.OfferOrder.Rejection.expired)"]
+java_file = "impl/java/src/main/java/offerorder/OfferOrderRules.java"
+java_contains = "now >= offer.expiresAt()"
+illustrative = "Demo case: this code is a copy we changed on purpose."
+illustrative_detail = "No running system is connected. The copy changes the Java expiry check from now >= expiresAt to now > expiresAt, the change the verified-air README describes."
+choices = [
+  { id = "rules", label = "The rules, which reject it", consequence = "The rules and you agree, and the code differs. That points to a code defect or an undocumented practice, so the case goes to the code's owners." },
+  { id = "code", label = "The code, which creates the order", consequence = "The code and you agree, and the rules differ. A modeller edits the Lean, and broken proofs show what else moves." },
+]
+
+[[card]]
+id = "zero-commitment"
+kind = "decide"
+area = "Payment"
+label = "Committing to pay nothing"
+case = "An order item has nothing to pay, and the seller commits to pay zero for it."
+question = "Which delivery status do its services move to?"
+decision = "def:c12-zero-commitment"
+top_ranked = true
+choices = [
+  { id = "ready", label = "READY TO PROCEED, as for a paid item" },
+  { id = "confirmed", label = "They stay CONFIRMED" },
+]

@@ -1,0 +1,10 @@
+{
+  "name": "verified-air-cards",
+  "private": true,
+  "description": "A phone demo of swipe review for the Verified Air rules",
+  "scripts": {
+    "start": "python3 -m http.server --directory web --bind 0.0.0.0 8010",
+    "test": "node --test test/game.test.js && python3 -m unittest discover -s test -p 'test_*.py'",
+    "e2e": "node test/e2e.mjs"
+  }
+}
