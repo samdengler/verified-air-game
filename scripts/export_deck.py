@@ -31,6 +31,9 @@ FIXED_CHOICES = {
     "followup": [("no", "No, something else should happen"), ("yes", "Yes, that is right")],
 }
 KINDS = {"predict", "decide", "confirm", "seeded", "followup", "reconcile"}
+# The model's CardKind, as the engines number it.
+KIND_CODES = {"predict": 0, "confirm": 1, "decide": 2, "seeded": 3, "followup": 4, "reconcile": 5}
+AGREES, DIFFERS = 0, 1
 
 
 class DeckError(Exception):
@@ -134,19 +137,26 @@ def build_card(raw, src):
         raise DeckError(f"{card_id}: unknown kind {kind}")
     check_style(card_id, raw)
 
+    say = raw.get("say") or f"{raw['question'].rstrip('?')}, Coach?"
+    extras = [f"{f['label']} {f['value']}" for f in raw.get("fields", [])]
+    if raw.get("show_today"):
+        extras.append(raw.get("today", ""))
     variants = raw.get("variants")
     if variants:
-        for text in variants.values():
-            check_face(card_id, text, raw["question"])
+        for key, text in variants.items():
+            check_face(card_id, text, say)
+            check_face(card_id, raw.get("headlines", {}).get(key, ""))
     else:
-        check_face(card_id, raw["case"], raw["question"])
+        check_face(card_id, raw.get("short") or raw["case"], say, *extras)
 
     card = {
         "id": card_id,
         "kind": kind,
         "area": raw["area"],
         "label": raw["label"],
+        "kindCode": KIND_CODES[kind],
         "question": raw["question"],
+        "say": say,
         "behind": {"lean": []},
         "reveal": {},
     }
@@ -249,12 +259,61 @@ def check_java(card_id, raw, src):
         raise DeckError(f"{card_id}: {raw['java_file']} no longer contains {raw['java_contains']!r}")
 
 
+def response_of(kind, choice):
+    """Which response a choice stands for, in the model's terms."""
+    if kind == "predict":
+        return AGREES if choice.get("model") else DIFFERS
+    if kind in FIXED_CHOICES:
+        return AGREES if choice["id"] == "yes" else DIFFERS
+    return AGREES
+
+
+def add_display(card, raw):
+    for key in ("short", "fields", "bars", "headlines", "stamps", "show_today"):
+        if key in raw:
+            card[key] = raw[key]
+    for choice in card.get("choices", []):
+        choice["response"] = response_of(card["kind"], choice)
+        for given in raw.get("choices", []):
+            if given.get("id") == choice["id"] and "stamp" in given:
+                choice["stamp"] = given["stamp"]
+
+
+def open_goals(src, names):
+    counts = {}
+    for node in src.nodes:
+        if node.get("status") in ("open", "decision"):
+            counts[node.get("section")] = counts.get(node.get("section"), 0) + 1
+    sections = {node.get("section") for node in src.nodes}
+    areas = []
+    for name in names:
+        if name not in sections:
+            raise DeckError(f"route: {name} is not a section of the model")
+        areas.append({"name": name, "openGoals": counts.get(name, 0)})
+    return areas
+
+
+def check_shifts(shifts, cards):
+    by_id = {card["id"]: card for card in cards}
+    for shift in shifts:
+        seen = set()
+        for card_id in shift["cards"]:
+            if card_id not in by_id:
+                raise DeckError(f"{shift['name']}: unknown card {card_id}")
+            parent = by_id[card_id].get("dependsOn")
+            if parent and parent not in seen:
+                raise DeckError(f"{shift['name']}: {card_id} must follow {parent} in the same shift")
+            seen.add(card_id)
+
+
 def build_deck(raw_deck, src, meta):
     cards = []
     ids = set()
     for raw in raw_deck["card"]:
         try:
-            cards.append(build_card(raw, src))
+            card = build_card(raw, src)
+            add_display(card, raw)
+            cards.append(card)
         except KeyError as missing:
             raise DeckError(f"{raw.get('id', '?')}: missing field {missing}") from missing
         ids.add(raw["id"])
@@ -262,7 +321,15 @@ def build_deck(raw_deck, src, meta):
         for ref in (card.get("dependsOn"), card["reveal"].get("echoes")):
             if ref and ref not in ids:
                 raise DeckError(f"{card['id']}: points at unknown card {ref}")
-    return {"title": raw_deck["title"], "source": meta, "cards": cards}
+    shifts = raw_deck.get("shifts", [{"name": "Shift", "cards": [card["id"] for card in cards]}])
+    check_shifts(shifts, cards)
+    return {
+        "title": raw_deck["title"],
+        "source": meta,
+        "areas": open_goals(src, raw_deck.get("route", [])),
+        "shifts": shifts,
+        "cards": cards,
+    }
 
 
 def load_source(root):

@@ -16,7 +16,7 @@ const WEB = join(HERE, "..", "web");
 const [WIDTH, HEIGHT] = (process.env.SIZE || "390x844").split("x").map(Number);
 const OUT = join(HERE, "out", process.env.SIZE || "");
 const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2" };
+const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".wasm": "application/wasm", ".jsonl": "text/plain" };
 
 function serve() {
   const server = createServer((req, res) => {
@@ -116,185 +116,211 @@ class Page {
   }
 }
 
-const sideOf = (page, choice) => page.eval(`document.querySelector('[data-choice="${choice}"]').dataset.side`);
+const MOTION_SETTLE = 600;
+const settle = () => new Promise((r) => setTimeout(r, MOTION_SETTLE));
 
-async function choose(page, card, choice) {
-  await page.at("card", card);
-  const side = await sideOf(page, choice);
-  const release = await page.swipe(side);
-  await release();
-  await page.at("reveal", card);
-  const said = await page.eval(`document.querySelector(".said b").textContent`);
-  assert.ok(said.length > 0);
+async function open(ws, url) {
+  const page = new Page(ws);
+  await page.send("Page.enable");
+  await page.send("Runtime.enable");
+  await page.send("Log.enable");
+  await page.send("Emulation.setDeviceMetricsOverride", { width: WIDTH, height: HEIGHT, deviceScaleFactor: 2, mobile: WIDTH < 700 });
+  await page.send("Emulation.setTouchEmulationEnabled", { enabled: true });
+  await page.send("Page.navigate", { url });
+  await page.until(`window.__game !== undefined`, "the game to start", 15000);
+  return page;
 }
 
-const next = async (page) => {
-  await page.tap("[data-next]");
+const at = (page, where, card) => page.at(where, card);
+const go = async (page, url) => {
+  await page.send("Page.navigate", { url });
+  await page.until(`window.__game !== undefined`, "the game to start", 15000);
+};
+const fits = async (page, name) => {
+  const over = await page.eval(`Math.max(0, document.scrollingElement.scrollHeight - innerHeight)`);
+  assert.equal(over, 0, `${name}: the page scrolls by ${over}px`);
+  const app = await page.eval(`(() => { const a = document.getElementById("app"); return a.scrollWidth - a.clientWidth; })()`);
+  assert.ok(app <= 1, `${name}: the screen scrolls sideways by ${app}px`);
 };
 
-async function run() {
+async function main() {
   mkdirSync(OUT, { recursive: true });
   const server = await serve();
+  const base = `http://127.0.0.1:${server.address().port}/`;
   const { chrome, port, profile } = await launch();
   try {
-    const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
-    const ws = new WebSocket(target.webSocketDebuggerUrl);
-    await new Promise((resolve) => ws.addEventListener("open", resolve, { once: true }));
-    const page = new Page(ws);
-    await page.send("Page.enable");
-    await page.send("Runtime.enable");
-    await page.send("Log.enable");
-    await page.send("Emulation.setDeviceMetricsOverride", { width: WIDTH, height: HEIGHT, deviceScaleFactor: 2, mobile: true });
-    await page.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
-    await page.send("Page.navigate", { url: `http://127.0.0.1:${server.address().port}/index.html` });
+    const { webSocketDebuggerUrl } = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
+    const ws = new WebSocket(webSocketDebuggerUrl);
+    await new Promise((resolve) => ws.addEventListener("open", resolve));
+    const page = await open(ws, `${base}?seed=2&fresh`);
 
-    await page.at("intro");
-    await page.until(`document.fonts.check('700 17px Overpass')`, "the font");
-    assert.equal(await page.eval(`document.fonts.check('700 17px Overpass') && [...document.fonts].some((f) => f.family === "Overpass" && f.status === "loaded")`), true);
-    await page.shot("01-intro");
+    assert.equal(await page.eval(`window.__game.engine`), "Lean", "the Lean engine should load");
+    const check = await page.eval(`window.__game.selfCheck()`);
+    assert.equal(check.passed, check.total, "the engine should pass every case on this device");
+    await at(page, "home");
+    await settle();
+    await page.shot("01-home");
+    await fits(page, "home");
 
-    // A short drag settles back and answers nothing.
+    // Start the first shift.
+    await page.tap("[data-start]");
+    await at(page, "case", "accept-at-expiry");
+    await settle();
+    await page.shot("02-case");
+    await fits(page, "case");
+    assert.equal(await page.eval(`document.querySelector(".upper").scrollHeight <= document.querySelector(".upper").clientHeight + 1 || ${HEIGHT} < 700`), true, "the ticket's text should fit");
+
+    // A short drag settles back.
     let release = await page.swipe("right", { distance: 40 });
     await release();
-    await new Promise((r) => setTimeout(r, 250));
-    assert.equal(await page.eval(`document.getElementById("app").dataset.at`), "intro");
+    await settle();
+    await at(page, "case", "accept-at-expiry");
+    assert.equal(await page.eval(`document.querySelector("[data-swipe]").style.transform`), "");
 
-    release = await page.swipe("right");
-    await release();
-
-    // Card 1: the fork leans while dragging, and a wrong prediction is a hold.
-    await page.at("card", "accept-at-expiry");
-    await new Promise((r) => setTimeout(r, 320));
-    await page.shot("02-predict");
-    if (HEIGHT >= 800) {
-      assert.equal(await page.eval(`document.documentElement.scrollHeight <= window.innerHeight`), true, "the card screen scrolls");
-    }
-    const wrongSide = await sideOf(page, "created");
-    release = await page.swipe(wrongSide);
-    assert.equal(await page.eval(`document.getElementById("app").dataset.lean`), wrongSide);
+    // A long drag leans, then stamps. Seed 2 and the first case keep the choices in deck order.
+    release = await page.swipe("left", { distance: 150 });
+    assert.equal(await page.eval(`document.getElementById("app").dataset.lean`), "left");
     await page.shot("03-drag");
     await release();
-    await page.at("reveal", "accept-at-expiry");
-    assert.ok(await page.eval(`!!document.querySelector(".plate-hold")`));
-    await page.shot("04-mismatch");
-    await page.tap("[data-sheet='exception']");
-    await page.until(`document.getElementById("sheet").open`, "the sheet");
-    await page.tap(".chip");
-    await page.shot("05-exception-sheet");
-    await page.tap("[data-sheet-ok]");
-    await page.until(`document.querySelector("[data-sheet='exception']").disabled`, "the exception to be recorded");
-    await next(page);
+    await at(page, "result", "accept-at-expiry");
+    assert.equal(await page.eval(`document.getElementById("app").dataset.outcome`), "0");
+    await settle();
+    await page.shot("04-same-call");
+    await fits(page, "same call");
 
-    // Card 2 matches.
-    await choose(page, "declined-card", "whole-fails");
-    assert.ok(await page.eval(`!document.querySelector(".plate-hold")`));
-    await page.shot("06-match");
-    await next(page);
+    // Sides swap on the next case, so swiping left now picks the other kind of answer.
+    await page.tap("[data-next]");
+    await at(page, "case", "declined-card");
+    assert.equal(await page.eval(`document.querySelector('[data-side="left"]').dataset.choice`), "trip-paid");
+    release = await page.swipe("left", { distance: 150 });
+    await release();
+    await at(page, "result", "declined-card");
+    assert.equal(await page.eval(`document.getElementById("app").dataset.surface`), "possible-catch");
+    await settle();
+    await page.shot("05-possible-catch");
+    await fits(page, "possible catch");
 
-    // Card 3: yes is on the right.
-    assert.equal(await (async () => { await page.at("card", "refund-rule"); return sideOf(page, "yes"); })(), "right");
-    await choose(page, "refund-rule", "yes");
-    await page.shot("07-confirm");
-    await next(page);
-
-    // Card 4: three choices leave the swipe off.
-    await page.at("card", "refund-limit");
-    assert.equal(await page.eval(`document.querySelector("[data-swipe]")`), null);
-    await new Promise((r) => setTimeout(r, 320));
-    await page.shot("08-decide-three");
+    // Three choices use taps, and the decision shows its reach.
+    await page.tap("[data-next]");
+    await at(page, "case", "refund-limit");
+    assert.equal(await page.eval(`document.querySelectorAll(".option").length`), 3);
+    assert.equal(await page.eval(`document.querySelectorAll(".dots i").length`), 15);
+    await settle();
+    await page.shot("06-decision");
+    await fits(page, "decision");
     await page.tap('[data-choice="per-payment"]');
-    await page.at("reveal", "refund-limit");
-    assert.match(await page.eval(`document.querySelector(".result").textContent`), /120\.00 USD/);
-    assert.match(await page.eval(`document.querySelector(".reach").textContent`), /15 cards depend/);
-    await page.shot("09-decide-reveal");
-    await next(page);
+    await at(page, "result", "refund-limit");
+    await settle();
+    await page.shot("07-decision-result");
 
-    // Card 5: the check card.
-    await choose(page, "late-payment-check", "no");
-    assert.match(await page.eval(`document.querySelector(".plate-verdict").textContent`), /caught/);
-    await page.shot("10-check-card");
-    await next(page);
+    // The follow-up is computed from the answer before it.
+    await page.tap("[data-next]");
+    await at(page, "case", "late-capture");
+    await page.tap('[data-choice="becomes-successful"]');
+    await at(page, "result", "late-capture");
+    await page.tap("[data-next]");
+    await at(page, "case", "late-capture-result");
+    assert.match(await page.eval(`document.querySelector("h1").textContent`), /paid for nothing/);
+    assert.equal(await page.eval(`document.getElementById("app").dataset.surface`), "consequence");
+    await settle();
+    await page.shot("08-paid-for-nothing");
+    await fits(page, "follow-up");
+    await page.tap('[data-side="right"]');
+    await at(page, "result", "late-capture-result");
+    await page.tap("[data-next]");
+    await at(page, "report");
+    await settle();
+    await page.shot("09-report");
+    assert.equal(await page.eval(`document.querySelectorAll(".tile").length`), 5);
 
-    // Cards 6 and 7: the follow-up shows the model's result for this answer.
-    await choose(page, "late-capture", "becomes-successful");
-    await next(page);
-    await page.at("card", "late-capture-result");
-    assert.match(await page.eval(`document.querySelector(".case").textContent`), /paid for nothing/);
-    await new Promise((r) => setTimeout(r, 320));
-    await page.shot("11-followup");
-    await choose(page, "late-capture-result", "no");
-    await page.shot("12-followup-finding");
-    await next(page);
+    // Answers survive a reload.
+    await go(page, `${base}?seed=2`);
+    await at(page, "report");
+    assert.equal(JSON.parse(await page.eval(`window.__game.answersJson()`)).answers.length, 5);
 
-    // Card 8: this choice has a proven version.
-    await page.at("card", "removal-status");
-    await page.tap('[data-choice="removed"]');
-    await page.at("reveal", "removal-status");
-    assert.match(await page.eval(`document.querySelector(".if-decided").textContent`), /none of them holds value/);
-    await page.shot("13-if-we-decide");
-    await next(page);
-
-    // Card 9: drift, marked as a demo case, recalling card 1.
-    await page.at("card", "expiry-drift");
-    assert.match(await page.eval(`document.querySelector(".flag").textContent`), /Demo case/);
-    await new Promise((r) => setTimeout(r, 320));
-    await page.shot("14-reconcile");
-    await choose(page, "expiry-drift", "rules");
-    assert.match(await page.eval(`document.querySelector(".echo").textContent`), /An order is created/);
-    await page.shot("15-reconcile-reveal");
-    await next(page);
-
-    // Card 10: "It depends" records a condition.
-    await page.at("card", "zero-commitment");
-    await new Promise((r) => setTimeout(r, 320));
-    await page.shot("16-top-question");
-    await page.tap("[data-sheet='depends']");
+    // The second shift: It depends, a check card, Not my area.
+    await page.tap("[data-done]");
+    await at(page, "home");
+    await page.tap("[data-start]");
+    await at(page, "case", "refund-rule");
+    await page.tap("[data-depends]");
     await page.until(`document.getElementById("sheet").open`, "the sheet");
-    await page.tap(".chip:nth-child(3)");
-    await page.tap("[data-sheet-ok]");
-    await page.at("reveal", "zero-commitment");
-    assert.match(await page.eval(`document.querySelector(".reach").textContent`), /51 cards depend/);
-    await page.shot("17-depends");
-    await next(page);
+    await settle();
+    await page.shot("10-it-depends");
+    await page.eval(`document.getElementById("note").value = "Depends on the market"; document.querySelector("[data-save-depends]").click()`);
+    await at(page, "result", "refund-rule");
+    assert.equal(await page.eval(`document.getElementById("app").dataset.outcome`), "2");
+    await page.tap("[data-next]");
+    await at(page, "case", "late-payment-check");
+    assert.equal(await page.eval(`document.querySelector('[data-side="right"]').dataset.choice`), "yes", "yes stays on the right");
+    await page.tap('[data-choice="no"]');
+    await at(page, "result", "late-payment-check");
+    assert.equal(await page.eval(`document.getElementById("app").dataset.outcome`), "4");
+    await settle();
+    await page.shot("11-check-passed");
+    await page.tap("[data-behind]");
+    await page.until(`document.getElementById("sheet").open`, "the sheet");
+    await page.eval(`document.querySelector("[data-run-check]").click()`);
+    await page.until(`/of .* cases passed/.test(document.querySelector("[data-check-result]").textContent)`, "the check");
+    await settle();
+    await page.shot("12-behind");
+    await page.eval(`document.querySelector("[data-close]").click()`);
+    await page.tap("[data-next]");
+    await at(page, "case", "removal-status");
+    await page.tap("[data-notmine]");
+    await at(page, "case", "expiry-drift");
+    assert.match(await page.eval(`document.querySelector(".demo-flag").textContent`), /Demo case/);
+    await page.tap('[data-choice="rules"]');
+    await at(page, "result", "expiry-drift");
+    await page.tap("[data-next]");
+    await at(page, "case", "zero-commitment");
+    assert.equal(await page.eval(`document.querySelectorAll(".dots i").length`), 51);
+    await settle();
+    await page.shot("13-top-question");
+    await fits(page, "top question");
+    await page.tap('[data-choice="ready"]');
+    await at(page, "result", "zero-commitment");
+    await page.tap("[data-next]");
+    await at(page, "report");
 
-    await page.at("end");
-    const end = await page.eval(`document.querySelector(".screen-end").textContent`);
-    assert.match(end, /No goals left/);
-    assert.match(end, /You caught the check card/);
-    assert.match(end, /It depends: Channel\./);
-    assert.match(end, /An answer changes no status/);
-    assert.equal(await page.eval(`document.documentElement.scrollWidth <= window.innerWidth`), true, "the page scrolls sideways");
-    await page.shot("18-end");
-
-    // Copy either reaches the clipboard or shows the text to copy by hand.
-    await page.tap("[data-copy]");
-    await page.until(`document.querySelector("[data-copy]").textContent !== "Copy answers"`, "the copy to finish");
-    if (await page.eval(`!document.querySelector(".copy-fallback").hidden`)) {
-      const exported = JSON.parse(await page.eval(`document.querySelector(".copy-fallback").value`));
-      assert.equal(exported.answers.length, 10);
+    // No follow-up after It depends: the shift goes straight to the report.
+    await go(page, `${base}?seed=2&fresh`);
+    await at(page, "home");
+    await page.eval(`(() => { for (const [a, b] of [["[data-start]"]]) document.querySelector(a).click(); })()`);
+    await at(page, "case", "accept-at-expiry");
+    for (const id of ["accept-at-expiry", "declined-card", "refund-limit"]) {
+      await at(page, "case", id);
+      await page.tap("[data-notmine]");
     }
+    await at(page, "case", "late-capture");
+    await page.tap("[data-depends]");
+    await page.until(`document.getElementById("sheet").open`, "the sheet");
+    await page.eval(`document.querySelector("[data-save-depends]").click()`);
+    await at(page, "result", "late-capture");
+    await page.tap("[data-next]");
+    await at(page, "report");
 
-    // A reload keeps the batch, and starting again clears it.
-    await page.send("Page.reload");
-    await page.at("end");
-    await page.tap("[data-restart]");
-    await page.at("intro");
+    // The keyboard works, and the JavaScript fallback plays the same game.
+    await go(page, `${base}?seed=2&fresh&engine=js`);
+    assert.equal(await page.eval(`window.__game.engine`), "JavaScript");
+    await at(page, "home");
+    await page.eval(`document.querySelector("[data-start]").click()`);
+    await at(page, "case", "accept-at-expiry");
+    await page.send("Input.dispatchKeyEvent", { type: "keyDown", key: "ArrowLeft", code: "ArrowLeft" });
+    await at(page, "result", "accept-at-expiry");
 
-    // Keyboard answers work too.
-    await page.eval(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))`);
-    await page.at("card", "accept-at-expiry");
-
-    assert.deepEqual(page.problems, [], "the page logged errors");
+    assert.deepEqual(page.problems.filter((p) => !/fonts\.g|navigator\.vibrate/.test(p)), []);
+    console.log(`ok: played both shifts with touch at ${WIDTH}x${HEIGHT}. Screenshots are in ${OUT}`);
     ws.close();
-    console.log(`ok: played the batch with touch. Screenshots are in ${OUT}`);
   } finally {
     chrome.kill();
     server.close();
-    setTimeout(() => rmSync(profile, { recursive: true, force: true }), 300);
+    await new Promise((r) => setTimeout(r, 300));
+    try { rmSync(profile, { recursive: true, force: true, maxRetries: 5 }); } catch { /* Chrome is still closing. The folder is temporary. */ }
   }
 }
 
-run().catch((err) => {
-  console.error(err);
+main().catch((error) => {
+  console.error(error);
   process.exit(1);
 });

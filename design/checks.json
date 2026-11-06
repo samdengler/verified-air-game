@@ -1,0 +1,9 @@
+{
+  "tokens": ["#003268", "#00214A", "#0B3A75", "#0C5FB8", "#E3132C", "#9B1631", "#E4EEF9", "#FBFCFE", "#FFFFFF", "#4D5F7D", "#E3ECF7", "#FF7A8A"],
+  "minTouchTarget": 44,
+  "minTextPx": 13,
+  "largeTextPx": 24,
+  "required": {"text": 4.5, "large text": 3, "graphics": 3},
+  "allowed": [{"fg":"#FFFFFF","bg":"#003268","use":"text"},{"fg":"#FFFFFF","bg":"#00214A","use":"text"},{"fg":"#FFFFFF","bg":"#0C5FB8","use":"text"},{"fg":"#FFFFFF","bg":"#E3132C","use":"text"},{"fg":"#00214A","bg":"#FBFCFE","use":"text"},{"fg":"#00214A","bg":"#FFFFFF","use":"text"},{"fg":"#00214A","bg":"#E4EEF9","use":"text"},{"fg":"#003268","bg":"#FBFCFE","use":"text"},{"fg":"#003268","bg":"#FFFFFF","use":"text"},{"fg":"#4D5F7D","bg":"#FBFCFE","use":"text"},{"fg":"#E3132C","bg":"#FBFCFE","use":"text"},{"fg":"#E3132C","bg":"#FFFFFF","use":"text"},{"fg":"#FFFFFF","bg":"#9B1631","use":"text"},{"fg":"#E3132C","bg":"#E4EEF9","use":"large text"},{"fg":"#FFFFFF","bg":"#003268","use":"graphics"},{"fg":"#FFFFFF","bg":"#00214A","use":"graphics"},{"fg":"#FFFFFF","bg":"#0C5FB8","use":"graphics"},{"fg":"#FFFFFF","bg":"#E3132C","use":"graphics"},{"fg":"#E3132C","bg":"#FBFCFE","use":"graphics"},{"fg":"#003268","bg":"#FBFCFE","use":"graphics"},{"fg":"#E3132C","bg":"#00214A","use":"graphics"},{"fg":"#00214A","bg":"#E4EEF9","use":"graphics"},{"fg":"#003268","bg":"#E3ECF7","use":"text"},{"fg":"#00214A","bg":"#E3ECF7","use":"text"},{"fg":"#4D5F7D","bg":"#E3ECF7","use":"text"},{"fg":"#FFFFFF","bg":"#0B3A75","use":"graphics"},{"fg":"#00214A","bg":"#FFFFFF","use":"graphics"},{"fg":"#E3132C","bg":"#FFFFFF","use":"graphics"}],
+  "forbidden": [{"fg":"#E3132C","bg":"#003268","use":"graphics"},{"fg":"#E3132C","bg":"#003268","use":"text"},{"fg":"#0C5FB8","bg":"#00214A","use":"graphics"},{"fg":"#0C5FB8","bg":"#003268","use":"graphics"},{"fg":"#E3132C","bg":"#0B3A75","use":"graphics"},{"fg":"#E3132C","bg":"#E4EEF9","use":"text"}]
+}

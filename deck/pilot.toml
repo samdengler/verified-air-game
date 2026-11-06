@@ -15,6 +15,15 @@
 
 title = "Payment and the pilot rules"
 
+# Areas on the home screen. Open goal counts are read from the verified-air build.
+route = ["Payment", "Offers, prices and conditions", "Delivery and fulfilment", "Change and cancellation"]
+
+# Each shift is a short run of cases. The engine cuts anything past the model's limit.
+shifts = [
+  { name = "First shift", cards = ["accept-at-expiry", "declined-card", "refund-limit", "late-capture", "late-capture-result"] },
+  { name = "Second shift", cards = ["refund-rule", "late-payment-check", "removal-status", "expiry-drift", "zero-commitment"] },
+]
+
 [[card]]
 id = "accept-at-expiry"
 kind = "predict"
@@ -22,12 +31,15 @@ area = "Pilot rules"
 label = "Accepting an offer at its expiry"
 case = "An offer is valid until 12:00 UTC. The customer accepts it at exactly 12:00 UTC."
 question = "What happens?"
+say = "Customer's at my desk. What do I do, Coach?"
+short = "The customer accepts the offer at its exact expiry."
+fields = [{ label = "Valid until", value = "12:00" }, { label = "Accepted", value = "12:00" }]
 example = "Rules.OfferOrder.acceptAtExpiry"
 requires = ["Except.error (Rules.OfferOrder.Rejection.expired)"]
 criterion = "OO-001.1"
 choices = [
-  { id = "rejected", label = "The offer is rejected as expired", model = true },
-  { id = "created", label = "An order is created" },
+  { id = "rejected", label = "Reject it as expired", model = true, stamp = "REJECTED" },
+  { id = "created", label = "Create the order", stamp = "ORDERED" },
 ]
 
 [[card]]
@@ -37,6 +49,9 @@ area = "Payment"
 label = "One method declined in a split payment"
 case = "A trip at 100.00 EUR and a bag at 40.00 EUR are paid in one payment. The settlement plan succeeds for 100.00 EUR. The card is declined for 40.00 EUR."
 question = "What happens?"
+say = "One payment, two items. What do I do, Coach?"
+short = "The settlement plan succeeds for the trip. The card is declined for the bag."
+fields = [{ label = "Trip, EUR", value = "100" }, { label = "Bag, EUR", value = "40" }]
 example = "Rules.OneOrder.Payment.declinedCardForBag"
 requires = [
   "payments := [Rules.OneOrder.Payment.PaymentStatus.failed]",
@@ -45,8 +60,8 @@ requires = [
 ]
 criterion = "ONE-302.3"
 choices = [
-  { id = "whole-fails", label = "The whole payment fails, and neither is paid", model = true },
-  { id = "trip-paid", label = "The trip is paid, and the bag is not" },
+  { id = "whole-fails", label = "Fail the whole payment", model = true, stamp = "FAILED" },
+  { id = "trip-paid", label = "Pay the trip, not the bag", stamp = "TRIP PAID" },
 ]
 
 [[card]]
@@ -56,6 +71,7 @@ area = "Pilot rules"
 label = "When a refund is accepted"
 case = "A refund is accepted only if it names the payment and its amount does not exceed that payment's amount."
 question = "Is that how refunds work?"
+say = "Is that how refunds work, Coach?"
 criterion = "OO-003.1"
 on_yes = "Nothing in the model checks this rule yet, so your answer is the first evidence for it."
 on_no = "A modeller follows up with you for one short conversation. You don't need to write the correct rule."
@@ -67,6 +83,11 @@ area = "Pilot rules"
 label = "The limit on refunds"
 case = "A customer paid 100.00 USD. Two refunds of 60.00 USD are requested against that payment."
 question = "What limit applies?"
+say = "I paid out both. What limit applies, Coach?"
+short = "One payment, two refunds asked against it."
+fields = [{ label = "Customer paid, USD", value = "100" }, { label = "Refunds asked, USD", value = "60 + 60" }]
+bars = { whole = 100, parts = [60, 60] }
+show_today = true
 open = "Rules.OfferOrder.refunds_le_payments"
 example = "Rules.OfferOrder.doubleRefund"
 requires = ["firstAccepted := true", "secondAccepted := true", "totalRefunded := { amount := 12000"]
@@ -84,6 +105,7 @@ area = "Payment"
 label = "A payment after the time limit"
 case = "A payment that arrives after an order item's payment time limit is accepted, as long as it covers the full price."
 question = "Is that how payments work?"
+say = "Is that how payments work, Coach?"
 criterion = "ONE-304.4"
 
 [[card]]
@@ -93,6 +115,7 @@ area = "Payment"
 label = "A card payment completed after removal"
 case = "An unpaid trip is removed at its payment time limit, and its pending card payment fails. One minute later the customer completes the card redirect, and the airline reports success."
 question = "What does the payment become?"
+say = "What does the payment become, Coach?"
 open = "Rules.OneOrder.Payment.recordOutcome_settled_final"
 example = "Rules.OneOrder.Payment.lateRedirectCapture"
 requires = [
@@ -112,6 +135,9 @@ area = "Payment"
 label = "The result of your late payment answer"
 depends_on = "late-capture"
 question = "Is that right?"
+say = "By the book, Coach! Is that right?"
+headlines = { stays-failed = "The redirect completed, and the payment stays failed.", becomes-successful = "The customer has paid for nothing." }
+stamps = { stays-failed = [{ text = "FAILED", ink = "red" }, { text = "FLIGHTS REMOVED", ink = "red" }], becomes-successful = [{ text = "PAID", ink = "blue" }, { text = "FLIGHTS REMOVED", ink = "red" }] }
 example = "Rules.OneOrder.Payment.lateRedirectCapture"
 requires = [
   "tripAtLimit := [Rules.OneOrder.DeliveryStatus.removed, Rules.OneOrder.DeliveryStatus.removed]",
@@ -131,6 +157,7 @@ area = "Payment"
 label = "The status of a removed item's services"
 case = "An unpaid trip at 100.00 EUR reaches its payment time limit, and the airline removes it."
 question = "Which delivery status do its services take?"
+say = "Which status do its services take, Coach?"
 open = "Rules.OneOrder.Payment.removed_item_holds_no_value"
 example = "Rules.OneOrder.Payment.removalStatuses"
 choices = [
@@ -146,6 +173,7 @@ area = "Pilot rules"
 label = "The rules and the code at expiry"
 case = "An offer is valid until 12:00 UTC, and the customer accepts it at exactly 12:00 UTC. The rules reject it. The code creates the order."
 question = "Which is right?"
+say = "Which is right, Coach?"
 echoes = "accept-at-expiry"
 example = "Rules.OfferOrder.acceptAtExpiry"
 requires = ["Except.error (Rules.OfferOrder.Rejection.expired)"]
@@ -165,6 +193,7 @@ area = "Payment"
 label = "Committing to pay nothing"
 case = "An order item has nothing to pay, and the seller commits to pay zero for it."
 question = "Which delivery status do its services move to?"
+say = "Which status do they move to, Coach?"
 decision = "def:c12-zero-commitment"
 top_ranked = true
 choices = [

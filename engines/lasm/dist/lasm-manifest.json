@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "generator": "lasm",
+  "target": "browser",
+  "name": "work",
+  "lasm": "0.5.0",
+  "lean": "4.35.0",
+  "entry": "app.792742307fee.js",
+  "wasm": "app.4c07f7a6b1ae.wasm",
+  "stableEntry": "app.js",
+  "index": "index.html",
+  "notices": "THIRD_PARTY_NOTICES.txt",
+  "suspend": "none",
+  "modules": [
+    "lasm:app"
+  ],
+  "immutable": [
+    "app.792742307fee.js",
+    "app.4c07f7a6b1ae.wasm",
+    "app.792742307fee.js.br",
+    "app.792742307fee.js.gz",
+    "app.4c07f7a6b1ae.wasm.br",
+    "app.4c07f7a6b1ae.wasm.gz"
+  ],
+  "transfer": {
+    "brotli": 129293,
+    "gzip": 165661,
+    "uncompressed": 546256
+  },
+  "files": {
+    "app.4c07f7a6b1ae.wasm": {
+      "bytes": 484775,
+      "sha256": "4c07f7a6b1aeca759ba73ab008541ab028c457357847a965c31cbbb8b1568f15",
+      "brotli": 112615,
+      "gzip": 146968
+    },
+    "app.792742307fee.js": {
+      "bytes": 61481,
+      "sha256": "792742307fee82e8be329038e3c07a9b3f3bf4011941143a69767b9d6ea9fcf5",
+      "brotli": 16678,
+      "gzip": 18693
+    },
+    "app.js": {
+      "bytes": 217,
+      "sha256": "b89733287d304d239470e1ee5aac0486bd68a942a35b0e461dbc1c9b3ac42766"
+    },
+    "index.html": {
+      "bytes": 418,
+      "sha256": "a040fd80a2279a28585fd95096f17fa8a49bb8444a48f68941a5d2c37f779675",
+      "brotli": 190,
+      "gzip": 272
+    }
+  },
+  "programKey": "dfb4942ef8cc72888a87b239d6c6cb1d116b45db38680b6f145123222c18dc7a",
+  "nodeBuildSignature": "357e9c7da467c3e4f4405601349d2a77898d121ee8d7f579503ff018a3ac6d1d"
+}

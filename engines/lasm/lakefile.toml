@@ -1,0 +1,7 @@
+# The model itself compiled to WebAssembly. scripts/build-lasm.sh copies the model's
+# game modules in beside Main.lean and builds in a throwaway container.
+name = "review-game-lasm"
+version = "0.1.0"
+
+[[lean_lib]]
+name = "Game"

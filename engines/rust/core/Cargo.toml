@@ -1,0 +1,11 @@
+[package]
+name = "review_game"
+version = "0.1.0"
+edition = "2021"
+description = "The review game's rules in Rust, proved equal to the Lean model with Aeneas"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[workspace]

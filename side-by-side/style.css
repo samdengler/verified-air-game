@@ -1,0 +1,33 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--color-ice); color: var(--color-navy); font-family: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif; }
+.top { padding: 28px 32px 8px; }
+h1 { margin: 0; font-size: 40px; letter-spacing: -0.8px; }
+.top p { margin: 6px 0 0; font-size: 18px; }
+.agree { font-weight: 750; }
+.phones { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; padding: 20px 32px 40px; max-width: 1240px; }
+.engine { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.engine h2 { margin: 0; font-size: 22px; }
+.phone { position: relative; height: 620px; border-radius: 30px; overflow: hidden; padding: 18px; display: flex; flex-direction: column; gap: 12px; background: var(--surface-asking); color: var(--ink-asking); transition: background var(--motion-ground-change); }
+.phone[data-surface="same-call"] { background: var(--surface-same-call); color: var(--ink-same-call); }
+.phone[data-surface="possible-catch"] { background: var(--surface-possible-catch); color: var(--ink-possible-catch); }
+.phone[data-surface="decision"] { background: var(--surface-decision); color: var(--ink-decision); }
+.phone[data-surface="report"] { background: var(--surface-report); color: var(--ink-report); }
+.progress { display: flex; gap: 5px; }
+.progress i { flex: 1; height: 8px; border-radius: 4px; background: currentColor; opacity: 0.3; }
+.progress i.done { opacity: 1; }
+.say { display: flex; gap: 10px; align-items: center; min-height: 92px; }
+.bubble { flex: 1; background: var(--color-paper); color: var(--color-navy); border-radius: 16px; padding: 10px 13px; font-size: 16px; line-height: 1.2; font-weight: 700; }
+.ticket { flex: 1; min-height: 0; background: var(--color-paper); color: var(--color-navy); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; }
+.ticket .tag { align-self: flex-start; background: var(--color-ice); color: var(--color-delta-blue); padding: 4px 10px; border-radius: 10px; font-size: 14px; font-weight: 750; }
+.ticket p { margin: 0; font-size: 21px; line-height: 1.16; font-weight: 750; }
+.stamp { align-self: center; margin-top: auto; padding: 3px 12px 1px; border: 4px solid currentColor; border-radius: 10px; font-family: "Saira Stencil One", Impact, sans-serif; font-size: 30px; transform: rotate(-4deg); color: var(--color-red); }
+.big { margin: 0; font-size: 44px; line-height: 0.96; font-weight: 800; letter-spacing: -1px; }
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button { min-height: var(--touch-target); border: 0; border-radius: 16px; font: inherit; font-weight: 750; cursor: pointer; background: var(--color-white); color: var(--color-navy); padding: 10px 12px; }
+button:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+button.quiet { background: transparent; color: inherit; border: 2px solid currentColor; }
+button.main { background: var(--color-red); color: var(--color-white); }
+.phone[data-surface="possible-catch"] button.main { background: var(--color-navy); }
+.facts { margin: 0; font-size: 15px; line-height: 1.3; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
+.facts dt { font-weight: 750; }
+.facts dd { margin: 0; }

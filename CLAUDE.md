@@ -1,29 +1,44 @@
 # CLAUDE.md
 
-A phone demo of swipe review for the Verified Air rules. The README explains the design and what is demo only. The model lives in `../verified-air`, whose CLAUDE.md sets the rules for what may be claimed about it.
+A phone game for reviewing the Verified Air rules, with its own Lean model. The README explains the parts. The airline rules live in `../verified-air`, whose CLAUDE.md sets the rules for what may be claimed about them.
 
-## Layout
+## Where things go
 
 | Authored | Generated |
 | --- | --- |
-| `deck/pilot.toml`: card wording and the Lean names behind it | `web/deck.js` (`scripts/export_deck.py`, committed) |
-| `web/game.js`: the rules, with no DOM | `test/out/` (`npm run e2e`, ignored) |
-| `web/app.js`, `web/style.css`, `web/index.html`: the page | |
+| `model/Game/`, `model/Design/`: the rules, the tokens and the theorems | `.kiro/specs/`, `vectors/`, `design/` (`npm run model`) |
+| `model/Game/Spec.lean`, `model/Design/Spec.lean`: the specs, as Lean values | `web/tokens.css`, `web/model.js`, `web/engine.js`, `web/vectors.txt`, `web/lean/` (`scripts/sync-web.sh`) |
+| `deck/pilot.toml`: card wording and the Lean names behind it | `web/deck.js` (`scripts/export_deck.py`) |
+| `web/app.js`, `web/style.css`, `web/index.html`: the page | `verify/Rust/` (`scripts/translate-rust.sh`) |
+| `engines/js`, `engines/rust`, `engines/lasm/Main.lean` | `engines/lasm/dist` (`scripts/build-lasm.sh`) |
 
-The page is plain files with classic scripts, so it also runs from `file://` and inside a Claude artifact. Keep it free of build steps and packages.
+## Rules for the model
+
+- A rule goes in the model. If the page needs to decide something, add it to the model and to every engine, and let the vectors check them.
+- Specs come from the model's values and compiled theorems. Never parse a docstring for them, and never hand-edit a generated file.
+- A guarantee names a real theorem. An undecided point is an open question with a theorem showing the problem, as RG-009 was until it was decided.
+- `model/Game` and `model/Design` import nothing from the airline rules, and those rules import nothing from here. Only `connect/` sees both.
+
+## Rules for the page
+
+- The page keeps no rules. `web/app.js` sends events to an engine and draws what returns. Layout, gestures, motion and copy live here.
+- The page stays plain static files with no build step, so it also runs from `file://` and in a Claude artifact, on the JavaScript fallback.
+- Use tokens only. `test/source.test.js` fails on a raw colour, and the browser test fails on any colour pair the design model does not allow.
+- A new engine function needs a change in `model/Game/Engine.lean`, `Gen/Vectors.lean`, all three engines and `verify/RustGame.lean`.
 
 ## Rules for cards
 
 - Statuses, example results and dependent counts come from the verified-air build. Never type one into `deck/pilot.toml`; use `requires`, `criterion`, `open`, `decision` or `proven`, so the export stops when the model changes.
 - A card shows one case and one question in at most 40 words, with no model vocabulary. More waits behind "Behind this card".
-- No suggested answers, and no points, streaks or leaderboards. The reasons are in the Claude Doc the README links.
 - An answer changes no status. Don't write copy that implies it does.
-- Anything not from the model says so on the card, as the drift card does.
+- Rookie calls the expert Coach. Rookie's mistakes belong to the rulebook, and the game never tells an expert they are wrong.
+- Rookie is a little jet, drawn once in `web/rookie.js`. Its eyes stay round and open in every mood, and it wears no cap: an earlier version with closed curved eyes and a cap could read as an ethnic caricature. Check any new character for that.
+- Reward what cannot be farmed: nothing pays for volume or speed.
 - Quote nothing from the EASD guide. Say "an example shows the rule breaking it", never "Lean found".
 
 ## Before committing
 
-Run `npm test` and `npm run e2e`, and look at the screenshots for a visual change. Run `python3 scripts/export_deck.py --check` if the deck or the model changed.
+Run `npm run model`, `npm test`, `npm run e2e`, `npm run test:browsers` and `scripts/check-connected.sh`, and look at the screenshots for a visual change.
 
 ## Writing
 

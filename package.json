@@ -1,10 +1,14 @@
 {
-  "name": "verified-air-cards",
+  "name": "verified-air-game",
   "private": true,
   "description": "A phone demo of swipe review for the Verified Air rules",
   "scripts": {
     "start": "python3 -m http.server --directory web --bind 0.0.0.0 8010",
-    "test": "node --test test/game.test.js && python3 -m unittest discover -s test -p 'test_*.py'",
-    "e2e": "node test/e2e.mjs"
+    "test": "node --test test/source.test.js && node test/engines.mjs && python3 -m unittest discover -s test -p 'test_*.py'",
+    "e2e": "node test/e2e.mjs",
+    "model": "cd model && lake build && lake exe vectors && lake exe specs && lake exe design-tokens && cd .. && scripts/sync-web.sh",
+    "test:engines": "node test/engines.mjs",
+    "test:browsers": "scripts/test-browsers.sh",
+    "side-by-side": "python3 -m http.server --bind 127.0.0.1 8011"
   }
 }

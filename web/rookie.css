@@ -1,0 +1,15 @@
+/* Rookie, the little jet, drawn by rookie.js. Every colour is a design token. */
+.rookie { flex: none; display: block; overflow: visible; transition: transform var(--motion-rookie-react); transform-origin: 50% 90%; }
+.rookie .outline { fill: var(--color-white); stroke: var(--color-white); stroke-width: 9; stroke-linejoin: round; }
+.rookie .fin { fill: var(--color-red); }
+.rookie .wing { fill: var(--color-red); stroke: var(--color-white); stroke-width: 2.5; stroke-linejoin: round; }
+.rookie .fuselage { fill: var(--color-paper); stroke: var(--color-navy); stroke-width: 3; stroke-linejoin: round; }
+.rookie .gear, .rookie .plate, .rookie .window, .rookie .pupil, .rookie .mouth { fill: var(--color-navy); }
+.rookie .mouth.open { stroke: var(--color-navy); stroke-width: 2.5; stroke-linejoin: round; }
+.rookie .hub, .rookie .shine { fill: var(--color-white); }
+.rookie .cheek, .rookie .tongue { fill: var(--color-rookie-cheek); }
+.rookie .eye { fill: var(--color-white); stroke: var(--color-navy); stroke-width: 2.5; }
+.rookie .sweat { fill: var(--color-white); stroke: var(--color-navy); stroke-width: 2; }
+.rookie .pupils { transition: transform var(--motion-rookie-react); }
+.rookie .stroke { fill: none; stroke: var(--color-navy); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.rookie text { font-family: "Saira Stencil One", Impact, sans-serif; font-size: 14px; text-anchor: middle; fill: var(--color-white); letter-spacing: .8px; text-rendering: geometricPrecision; }

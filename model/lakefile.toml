@@ -1,0 +1,32 @@
+# The review game's own model. It has no dependencies: it does not import the
+# airline rules or Mathlib, so it builds in seconds and can compile to any target.
+# ../connect holds the one package that sees this model and the airline rules.
+name = "review-game"
+version = "0.1.0"
+defaultTargets = ["Game", "Design", "specs", "vectors", "design-tokens"]
+
+[leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
+
+[[lean_lib]]
+name = "Game"
+
+[[lean_lib]]
+name = "Design"
+
+# Writes .kiro/specs from the model's values and the proved theorems' statements.
+[[lean_exe]]
+name = "specs"
+root = "Gen.Specs"
+supportInterpreter = true
+
+# Writes the conformance vectors every engine must pass.
+[[lean_exe]]
+name = "vectors"
+root = "Gen.Vectors"
+
+# Writes design tokens, design documentation and UI check expectations.
+[[lean_exe]]
+name = "design-tokens"
+root = "Gen.DesignTokens"

@@ -1,0 +1,5 @@
+{
+ "js": "985 B with brotli",
+ "rust": "500 B with brotli",
+ "lean": "126.3 KB with brotli"
+}

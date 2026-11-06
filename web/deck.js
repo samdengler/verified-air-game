@@ -3,16 +3,58 @@ window.DECK = {
  "title": "Payment and the pilot rules",
  "source": {
   "repo": "samdengler/verified-air",
-  "commit": "c8bd5ec",
-  "built": "2026-10-31"
+  "commit": "bf89399",
+  "built": "2026-11-05"
  },
+ "areas": [
+  {
+   "name": "Payment",
+   "openGoals": 13
+  },
+  {
+   "name": "Offers, prices and conditions",
+   "openGoals": 13
+  },
+  {
+   "name": "Delivery and fulfilment",
+   "openGoals": 10
+  },
+  {
+   "name": "Change and cancellation",
+   "openGoals": 19
+  }
+ ],
+ "shifts": [
+  {
+   "name": "First shift",
+   "cards": [
+    "accept-at-expiry",
+    "declined-card",
+    "refund-limit",
+    "late-capture",
+    "late-capture-result"
+   ]
+  },
+  {
+   "name": "Second shift",
+   "cards": [
+    "refund-rule",
+    "late-payment-check",
+    "removal-status",
+    "expiry-drift",
+    "zero-commitment"
+   ]
+  }
+ ],
  "cards": [
   {
    "id": "accept-at-expiry",
    "kind": "predict",
    "area": "Pilot rules",
    "label": "Accepting an offer at its expiry",
+   "kindCode": 0,
    "question": "What happens?",
+   "say": "Customer's at my desk. What do I do, Coach?",
    "behind": {
     "lean": [
      "Rules.OfferOrder.acceptAtExpiry",
@@ -33,12 +75,27 @@ window.DECK = {
    "choices": [
     {
      "id": "rejected",
-     "label": "The offer is rejected as expired",
-     "model": true
+     "label": "Reject it as expired",
+     "model": true,
+     "response": 0,
+     "stamp": "REJECTED"
     },
     {
      "id": "created",
-     "label": "An order is created"
+     "label": "Create the order",
+     "response": 1,
+     "stamp": "ORDERED"
+    }
+   ],
+   "short": "The customer accepts the offer at its exact expiry.",
+   "fields": [
+    {
+     "label": "Valid until",
+     "value": "12:00"
+    },
+    {
+     "label": "Accepted",
+     "value": "12:00"
     }
    ]
   },
@@ -47,7 +104,9 @@ window.DECK = {
    "kind": "predict",
    "area": "Payment",
    "label": "One method declined in a split payment",
+   "kindCode": 0,
    "question": "What happens?",
+   "say": "One payment, two items. What do I do, Coach?",
    "behind": {
     "lean": [
      "Rules.OneOrder.Payment.declinedCardForBag",
@@ -68,12 +127,27 @@ window.DECK = {
    "choices": [
     {
      "id": "whole-fails",
-     "label": "The whole payment fails, and neither is paid",
-     "model": true
+     "label": "Fail the whole payment",
+     "model": true,
+     "response": 0,
+     "stamp": "FAILED"
     },
     {
      "id": "trip-paid",
-     "label": "The trip is paid, and the bag is not"
+     "label": "Pay the trip, not the bag",
+     "response": 1,
+     "stamp": "TRIP PAID"
+    }
+   ],
+   "short": "The settlement plan succeeds for the trip. The card is declined for the bag.",
+   "fields": [
+    {
+     "label": "Trip, EUR",
+     "value": "100"
+    },
+    {
+     "label": "Bag, EUR",
+     "value": "40"
     }
    ]
   },
@@ -82,7 +156,9 @@ window.DECK = {
    "kind": "confirm",
    "area": "Pilot rules",
    "label": "When a refund is accepted",
+   "kindCode": 1,
    "question": "Is that how refunds work?",
+   "say": "Is that how refunds work, Coach?",
    "behind": {
     "lean": [],
     "link": "https://samdengler.github.io/verified-air/review/"
@@ -100,11 +176,13 @@ window.DECK = {
    "choices": [
     {
      "id": "no",
-     "label": "No"
+     "label": "No",
+     "response": 1
     },
     {
      "id": "yes",
-     "label": "Yes"
+     "label": "Yes",
+     "response": 0
     }
    ]
   },
@@ -113,7 +191,9 @@ window.DECK = {
    "kind": "decide",
    "area": "Pilot rules",
    "label": "The limit on refunds",
+   "kindCode": 2,
    "question": "What limit applies?",
+   "say": "I paid out both. What limit applies, Coach?",
    "behind": {
     "lean": [
      "Rules.OfferOrder.refunds_le_payments",
@@ -140,26 +220,50 @@ window.DECK = {
     {
      "id": "per-refund",
      "label": "Each refund on its own",
-     "consequence": "The rule stays as written, and refunds can exceed what was paid."
+     "consequence": "The rule stays as written, and refunds can exceed what was paid.",
+     "response": 0
     },
     {
      "id": "per-payment",
      "label": "All refunds on the payment, together",
-     "consequence": "The second refund is refused. A modeller changes the rule, and Lean checks whether refunds then stay within payments."
+     "consequence": "The second refund is refused. A modeller changes the rule, and Lean checks whether refunds then stay within payments.",
+     "response": 0
     },
     {
      "id": "per-order",
      "label": "All refunds on the order, together",
-     "consequence": "The second refund is refused, because this order's only payment is 100.00 USD. A modeller changes the rule, and Lean checks whether refunds then stay within payments."
+     "consequence": "The second refund is refused, because this order's only payment is 100.00 USD. A modeller changes the rule, and Lean checks whether refunds then stay within payments.",
+     "response": 0
     }
-   ]
+   ],
+   "short": "One payment, two refunds asked against it.",
+   "fields": [
+    {
+     "label": "Customer paid, USD",
+     "value": "100"
+    },
+    {
+     "label": "Refunds asked, USD",
+     "value": "60 + 60"
+    }
+   ],
+   "bars": {
+    "whole": 100,
+    "parts": [
+     60,
+     60
+    ]
+   },
+   "show_today": true
   },
   {
    "id": "late-payment-check",
    "kind": "seeded",
    "area": "Payment",
    "label": "A payment after the time limit",
+   "kindCode": 3,
    "question": "Is that how payments work?",
+   "say": "Is that how payments work, Coach?",
    "behind": {
     "lean": [
      "Rules.OneOrder.Payment.paymentAfterTimeLimit",
@@ -178,11 +282,13 @@ window.DECK = {
    "choices": [
     {
      "id": "no",
-     "label": "No"
+     "label": "No",
+     "response": 1
     },
     {
      "id": "yes",
-     "label": "Yes"
+     "label": "Yes",
+     "response": 0
     }
    ]
   },
@@ -191,7 +297,9 @@ window.DECK = {
    "kind": "decide",
    "area": "Payment",
    "label": "A card payment completed after removal",
+   "kindCode": 2,
    "question": "What does the payment become?",
+   "say": "What does the payment become, Coach?",
    "behind": {
     "lean": [
      "Rules.OneOrder.Payment.recordOutcome_settled_final",
@@ -213,12 +321,14 @@ window.DECK = {
     {
      "id": "stays-failed",
      "label": "It stays failed",
-     "consequence": "The model has already computed this answer. The next card shows you the result."
+     "consequence": "The model has already computed this answer. The next card shows you the result.",
+     "response": 0
     },
     {
      "id": "becomes-successful",
      "label": "It becomes successful",
-     "consequence": "The model has already computed this answer. The next card shows you the result."
+     "consequence": "The model has already computed this answer. The next card shows you the result.",
+     "response": 0
     }
    ]
   },
@@ -227,7 +337,9 @@ window.DECK = {
    "kind": "followup",
    "area": "Payment",
    "label": "The result of your late payment answer",
+   "kindCode": 4,
    "question": "Is that right?",
+   "say": "By the book, Coach! Is that right?",
    "behind": {
     "lean": [
      "Rules.OneOrder.Payment.lateRedirectCapture"
@@ -247,20 +359,50 @@ window.DECK = {
    "choices": [
     {
      "id": "no",
-     "label": "No, something else should happen"
+     "label": "No, something else should happen",
+     "response": 1
     },
     {
      "id": "yes",
-     "label": "Yes, that is right"
+     "label": "Yes, that is right",
+     "response": 0
     }
-   ]
+   ],
+   "headlines": {
+    "stays-failed": "The redirect completed, and the payment stays failed.",
+    "becomes-successful": "The customer has paid for nothing."
+   },
+   "stamps": {
+    "stays-failed": [
+     {
+      "text": "FAILED",
+      "ink": "red"
+     },
+     {
+      "text": "FLIGHTS REMOVED",
+      "ink": "red"
+     }
+    ],
+    "becomes-successful": [
+     {
+      "text": "PAID",
+      "ink": "blue"
+     },
+     {
+      "text": "FLIGHTS REMOVED",
+      "ink": "red"
+     }
+    ]
+   }
   },
   {
    "id": "removal-status",
    "kind": "decide",
    "area": "Payment",
    "label": "The status of a removed item's services",
+   "kindCode": 2,
    "question": "Which delivery status do its services take?",
+   "say": "Which status do its services take, Coach?",
    "behind": {
     "lean": [
      "Rules.OneOrder.Payment.removed_item_holds_no_value",
@@ -286,17 +428,20 @@ window.DECK = {
      "proven": {
       "name": "Rules.OneOrder.Payment.removed_item_holds_no_value_of_removed",
       "text": "When the removal cancels a removed item's services as REMOVED, and the delivery status table lets each of them be removed, none of them holds value, under every reading of the guide."
-     }
+     },
+     "response": 0
     },
     {
      "id": "expired",
      "label": "EXPIRED",
-     "consequence": "The result turns on one more open question: does an expired service hold value? If it does, the trip stays active and keeps its order opened. If it does not, the trip is cancelled."
+     "consequence": "The result turns on one more open question: does an expired service hold value? If it does, the trip stays active and keeps its order opened. If it does not, the trip is cancelled.",
+     "response": 0
     },
     {
      "id": "hold-value",
      "label": "REMOVED HOLD VALUE",
-     "consequence": "The trip stays active and keeps its order opened, because its services hold value."
+     "consequence": "The trip stays active and keeps its order opened, because its services hold value.",
+     "response": 0
     }
    ]
   },
@@ -305,7 +450,9 @@ window.DECK = {
    "kind": "reconcile",
    "area": "Pilot rules",
    "label": "The rules and the code at expiry",
+   "kindCode": 5,
    "question": "Which is right?",
+   "say": "Which is right, Coach?",
    "behind": {
     "lean": [
      "Rules.OfferOrder.acceptAtExpiry"
@@ -323,12 +470,14 @@ window.DECK = {
     {
      "id": "rules",
      "label": "The rules, which reject it",
-     "consequence": "The rules and you agree, and the code differs. That points to a code defect or an undocumented practice, so the case goes to the code's owners."
+     "consequence": "The rules and you agree, and the code differs. That points to a code defect or an undocumented practice, so the case goes to the code's owners.",
+     "response": 0
     },
     {
      "id": "code",
      "label": "The code, which creates the order",
-     "consequence": "The code and you agree, and the rules differ. A modeller edits the Lean, and broken proofs show what else moves."
+     "consequence": "The code and you agree, and the rules differ. A modeller edits the Lean, and broken proofs show what else moves.",
+     "response": 0
     }
    ]
   },
@@ -337,7 +486,9 @@ window.DECK = {
    "kind": "decide",
    "area": "Payment",
    "label": "Committing to pay nothing",
+   "kindCode": 2,
    "question": "Which delivery status do its services move to?",
+   "say": "Which status do they move to, Coach?",
    "behind": {
     "lean": [],
     "blueprint": "Committing to pay nothing",
@@ -364,11 +515,13 @@ window.DECK = {
    "choices": [
     {
      "id": "ready",
-     "label": "READY TO PROCEED, as for a paid item"
+     "label": "READY TO PROCEED, as for a paid item",
+     "response": 0
     },
     {
      "id": "confirmed",
-     "label": "They stay CONFIRMED"
+     "label": "They stay CONFIRMED",
+     "response": 0
     }
    ]
   }
