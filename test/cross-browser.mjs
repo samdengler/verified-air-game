@@ -8,16 +8,28 @@ import { chromium, firefox, webkit, devices } from "playwright";
 const ROOT = process.env.ROOT || "/work";
 const OUT = process.env.OUT || "/out";
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json", ".jsonl": "text/plain", ".wasm": "application/wasm" };
+// The game is served under the same content security policy as the live site.
+const POLICY = readFileSync(join(ROOT, "infra", "csp.txt"), "utf8").trim();
 const server = createServer((req, res) => {
   const path = normalize(new URL(req.url, "http://x").pathname).replace(/^\/+/, "");
   let file = join(ROOT, path);
   if (existsSync(file) && statSync(file).isDirectory()) file = join(file, "index.html");
   if (!file.startsWith(ROOT) || !existsSync(file)) { res.writeHead(404).end(); return; }
-  res.writeHead(200, { "content-type": MIME[extname(file)] || "application/octet-stream" });
+  res.writeHead(200, { "content-type": MIME[extname(file)] || "application/octet-stream", ...(path.startsWith("web/") ? { "content-security-policy": POLICY } : {}) });
   createReadStream(file).pipe(res);
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
+// Playwright's waitForFunction polls with eval, which the live policy blocks, so wait with evaluate.
+async function until(page, test, arg, timeout = 30000) {
+  const end = Date.now() + timeout;
+  while (Date.now() < end) {
+    if (await page.evaluate(test, arg)) return;
+    await page.waitForTimeout(25);
+  }
+  throw new Error(`timed out waiting for ${test}`);
+}
+
 const browsers = [
   ["chromium", chromium, devices["Pixel 7"]],
   ["firefox", firefox, { viewport: { width: 390, height: 844 } }],
@@ -128,8 +140,8 @@ function audit(rules) {
 
 // Plays both shifts of the real app, measuring every screen on the way.
 async function playApp(page, url, measure) {
-  const app = (name) => page.waitForFunction((n) => document.getElementById("app").dataset.at === n, name, { timeout: 15000 });
-  const onCard = (id) => page.waitForFunction((c) => document.getElementById("app").dataset.card === c, id, { timeout: 15000 });
+  const app = (name) => until(page, (n) => document.getElementById("app").dataset.at === n, name, 15000);
+  const onCard = (id) => until(page, (c) => document.getElementById("app").dataset.card === c, id, 15000);
   const screen = async (name) => {
     await page.waitForTimeout(40);
     await measure(name);
@@ -146,7 +158,7 @@ async function playApp(page, url, measure) {
   };
   const click = (selector) => page.locator(selector).first().click();
   await page.goto(url);
-  await page.waitForFunction("window.__game !== undefined", null, { timeout: 30000 });
+  await until(page, "window.__game !== undefined");
   await app("home");
   await screen("home");
   await click("[data-start]");
@@ -184,7 +196,7 @@ async function playApp(page, url, measure) {
   await click("[data-start]");
   await onCard("refund-rule");
   await click("[data-depends]");
-  await page.waitForFunction(() => document.getElementById("sheet").open);
+  await until(page, () => document.getElementById("sheet").open);
   await screen("it depends sheet");
   await page.locator("[data-save-depends]").click();
   await app("result");
@@ -195,9 +207,9 @@ async function playApp(page, url, measure) {
   await app("result");
   await screen("check passed");
   await click("[data-behind]");
-  await page.waitForFunction(() => document.getElementById("sheet").open);
+  await until(page, () => document.getElementById("sheet").open);
   await page.locator("[data-run-check]").click();
-  await page.waitForFunction(() => /cases passed/.test(document.querySelector("[data-check-result]").textContent), null, { timeout: 30000 });
+  await until(page, () => /cases passed/.test(document.querySelector("[data-check-result]").textContent));
   await screen("behind this card");
   const check = await page.locator("[data-check-result]").textContent();
   await page.locator("[data-close]").click();
@@ -264,6 +276,10 @@ for (const [name, type, device] of browsers) {
   await wide.close();
   // The real app, at phone size, measured against the design rules on every screen.
   const appContext = await browser.newContext({ ...device, isMobile: name === "firefox" ? undefined : device.isMobile, reducedMotion: "reduce" });
+  await appContext.addInitScript(() => {
+    window.__blocked = [];
+    document.addEventListener("securitypolicyviolation", (e) => window.__blocked.push(`content security policy blocked ${e.blockedURI} under ${e.violatedDirective}`));
+  });
   const appPage = await appContext.newPage();
   const appErrors = [];
   appPage.on("pageerror", (e) => appErrors.push(String(e)));
@@ -278,6 +294,7 @@ for (const [name, type, device] of browsers) {
       for (const item of found[kind]) findings.push({ screen: screenName, kind, ...item });
     }
   });
+  appErrors.push(...(await appPage.evaluate(() => window.__blocked)));
   await appContext.close();
   // With the Lean engine blocked, the same game has to run on the fallback.
   const blocked = await browser.newContext({ ...device, isMobile: name === "firefox" ? undefined : device.isMobile, reducedMotion: "reduce" });

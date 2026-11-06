@@ -1,0 +1,20 @@
+[project]
+name = "gate-check-infra"
+version = "0.1.0"
+description = "AWS CDK app for Gate Check's site at gatecheck.dengler.io"
+requires-python = ">=3.12"
+dependencies = [
+    "aws-cdk-lib>=2.268",
+    "constructs>=10.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

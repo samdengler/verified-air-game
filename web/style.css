@@ -1,4 +1,4 @@
-/* The review game's screens. Every colour, type size and duration here is a token from
+/* Gate Check's screens. Every colour, type size and duration here is a token from
    tokens.css, which the Lean design model generates. test/source.test.js fails on a raw colour. */
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--color-navy); overflow-x: clip; }
@@ -123,6 +123,7 @@ button { font: inherit; cursor: pointer; }
 .compare span { font-size: var(--type-label); font-weight: 650; }
 .compare b { font-size: min(18px, 4.6vw); line-height: 1.16; font-weight: 750; }
 .tagged { background: var(--color-navy); color: var(--color-white); border-radius: 16px; padding: 11px 14px; font-weight: 650; }
+a.main { display: flex; align-items: center; justify-content: center; text-decoration: none; }
 .main {
   flex: none; min-height: 60px; width: 100%; border: 3px solid var(--color-white); border-radius: 22px; background: var(--color-red); color: var(--color-white);
   box-shadow: 0 6px 0 var(--color-red-dark); font-size: 21px; font-weight: 800;

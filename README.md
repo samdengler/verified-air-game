@@ -1,4 +1,4 @@
-# Verified Air review game
+# Gate Check
 
 A phone game for reviewing the [Verified Air](https://github.com/samdengler/verified-air) rules. You coach Rookie, a little jet and new hire who follows the rulebook to the letter. Each case takes a swipe, and the biggest moment in the game is catching the rulebook out.
 
@@ -7,6 +7,8 @@ The game has its own Lean model. The screens, the Kiro specs, the design tokens 
 ![Five screens: today's shift, a case, a possible catch, the customer has paid for nothing, and the shift report](docs/screens.png)
 
 ## Run it
+
+The game is live at <https://gatecheck.dengler.io/>. To run it yourself:
 
 ```sh
 npm start
@@ -64,6 +66,18 @@ scripts/check-connected.sh   # the Rust proof and the deck, against a built ../v
 ```
 
 `npm run test:browsers` fails on any design finding, so a forbidden colour pair or a small touch target stops it.
+
+## Hosting
+
+`infra/` is the `GateCheck` CDK stack: `web/` in a private S3 bucket behind CloudFront at gatecheck.dengler.io, with a DNS-validated certificate and security headers. `infra/csp.txt` is the content security policy, and the browser tests serve the page under the same file. It allows Lean's WebAssembly and no `eval`.
+
+```sh
+scripts/deploy.sh                 # deploy the stack, then publish web/. Needs AWS credentials for the account with the dengler.io zone
+scripts/deploy.sh --site-only     # publish web/ only
+(cd infra && uv run --dev pytest -q)   # the stack's tests
+```
+
+A push does not publish. Run `scripts/deploy.sh --site-only` after a change to `web/`.
 
 ## What is demo only
 

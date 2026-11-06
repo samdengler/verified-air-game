@@ -1,4 +1,4 @@
-# The review game's model
+# Gate Check's model
 
 The app's rules and the design system's rules, in Lean. `lake build` checks every theorem.
 

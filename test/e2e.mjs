@@ -5,7 +5,7 @@
 // Usage: node test/e2e.mjs
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { createReadStream, existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
@@ -18,6 +18,9 @@ const OUT = join(HERE, "out", process.env.SIZE || "");
 const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".wasm": "application/wasm", ".jsonl": "text/plain" };
 
+// The game is served under the same content security policy as the live site.
+const POLICY = readFileSync(join(HERE, "..", "infra", "csp.txt"), "utf8").trim();
+
 function serve() {
   const server = createServer((req, res) => {
     const name = normalize(new URL(req.url, "http://x").pathname).replace(/^\/+/, "") || "index.html";
@@ -26,7 +29,7 @@ function serve() {
       res.writeHead(404).end();
       return;
     }
-    res.writeHead(200, { "content-type": MIME[extname(file)] || "application/octet-stream" });
+    res.writeHead(200, { "content-type": MIME[extname(file)] || "application/octet-stream", "content-security-policy": POLICY });
     createReadStream(file).pipe(res);
   });
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(server)));

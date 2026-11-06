@@ -166,7 +166,7 @@ def countOf (status : String) (counts : List (String × Nat)) : Nat :=
   (counts.filter (·.1 == status)).length
 
 def indexFile (rows : List (SpecFile × List (String × Nat))) : String := Id.run do
-  let mut out := header "the model" ++ "\n# Review game specs\n\nThese Kiro specs are generated from the Lean model in `model/`. To change one, change the model and run `lake exe specs` there.\n\n| Spec | Requirements | Modelled | Proven | Open questions |\n| --- | --- | --- | --- | --- |\n"
+  let mut out := header "the model" ++ "\n# Gate Check specs\n\nThese Kiro specs are generated from the Lean model in `model/`. To change one, change the model and run `lake exe specs` there.\n\n| Spec | Requirements | Modelled | Proven | Open questions |\n| --- | --- | --- | --- | --- |\n"
   for (f, c) in rows do
     let reqs := " ".intercalate (f.requirements.map (·.id))
     out := out ++ s!"| [{f.title}]({f.folder}/requirements.md) | {reqs} | {countOf "modelled" c} | {countOf "proven" c} | {countOf "open question" c} |\n"

@@ -1,4 +1,4 @@
-// The review game's page. It keeps no rules: every decision comes from an engine built from the
+// Gate Check's page. It keeps no rules: every decision comes from an engine built from the
 // Lean model, or from model.js and deck.js, which are generated. This file draws what they return
 // and handles gestures, motion and vibration.
 (function () {
@@ -230,7 +230,7 @@
       <p class="sub">${state.session.length} cases, about 2 minutes</p>
       <div class="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M7.6 84 C7.6 71 95.2 71 95.2 58 C95.2 46 4.8 46 4.8 34 C4.8 22 95.2 22 95.2 10"/></svg>${stops}</div>
       <button class="main" data-start>Start ${esc(shift.name.toLowerCase())}</button>
-      <p class="fine">A demo. Answers stay on this device. Verified Air is a proof of concept, not affiliated with IATA.</p>
+      <p class="fine">Gate Check is a demo. Answers stay on this device. Verified Air is a proof of concept, not affiliated with IATA.</p>
       <div class="row"><button class="link" data-reset>Start over</button></div>`;
   }
 
