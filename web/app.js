@@ -443,7 +443,7 @@
         return { surface: "asking", html: `${top}
           <div class="head-row"><h1 class="big">Meet Rookie.</h1>${rookie("happy", 92)}</div>
           <p class="sub">A new hire who follows the rulebook to the letter, even when the result is absurd.</p>
-          <div class="panel"><span>Your job, Coach</span><b>You know how the work really goes. Catch the rulebook before it embarrasses the airline.</b></div>
+          <div class="panel"><span>Your job, Coach</span><b>You know how the work really goes. Check the rules at the gate, before they reach a customer.</b></div>
           <p class="fine">The rulebook is the airline's rules, written so exactly that a computer can check them.</p>
           ${gap}${tourNav()}` };
       case "case":
