@@ -167,6 +167,9 @@
     return window.drawRookie(mood, width);
   }
 
+  // Going home is only navigation: the shift stays exactly where it was, and the home screen offers to continue it.
+  const shiftTop = (done, total) => `<div class="shift-top"><button class="home-button" data-home aria-label="Home"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 L12 3.5 L21 11.5 M6 9.5 V20 H18 V9.5"/></svg></button>${route(done, total)}</div>`;
+
   const arrow = (dir) => `<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="${dir === "right" ? "M4 12 H20 M13 5 L20 12 L13 19" : "M20 12 H4 M11 5 L4 12 L11 19"}"/></svg>`;
   const stamp = (text, cls = "") => `<span class="stamp ${cls}">${esc(text)}</span>`;
 
@@ -224,6 +227,8 @@
 
   function renderHome() {
     const shift = DECK.shifts[state.shift];
+    const s = state.session;
+    const resuming = s.phase !== PHASE.INTRO;
     const stops = DECK.areas.map((area, i) => {
       const y = [84, 58, 34, 10][i];
       const node = i === 0 ? `<span class="node"><svg width="30" height="30" viewBox="-16 -16 32 32" aria-hidden="true"><g transform="rotate(-60)">${PLANE}</g></svg></span>` : '<span class="node"></span>';
@@ -232,11 +237,12 @@
     return `
       <div class="top"><div class="week">Week ${state.streak.weeks + 1} on shift${pips(weeksShown())}</div><span class="title-chip">${esc(titleNow())}</span></div>
       <div class="head-row"><h1 class="big">Today's shift</h1>${rookie("happy", 92)}</div>
-      <p class="sub">${state.session.length} cases, about 2 minutes</p>
+      <p class="sub">${resuming ? `Case ${s.index + 1} of ${s.length}. Your answers so far are saved.` : `${s.length} cases, about 2 minutes`}</p>
       <div class="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M7.6 84 C7.6 71 95.2 71 95.2 58 C95.2 46 4.8 46 4.8 34 C4.8 22 95.2 22 95.2 10"/></svg>${stops}</div>
-      <button class="main" data-start>Start ${esc(shift.name.toLowerCase())}</button>
+      <button class="main" data-start>${resuming ? "Continue" : "Start"} ${esc(shift.name.toLowerCase())}</button>
+      <button class="secondary" data-tour>Take the tour</button>
       <p class="fine">Gate Check is a demo. Answers stay on this device. Verified Air is a proof of concept, not affiliated with IATA.</p>
-      <div class="row"><button class="link" data-tour>Take the tour</button><button class="link" data-reset>Start over</button></div>`;
+      <div class="row"><button class="link" data-reset>Start over</button></div>`;
   }
 
   function renderCase(card) {
@@ -256,7 +262,7 @@
     } else {
       controls = `<div class="options">${card.choices.map((c, i) => `<button class="option" data-choice="${esc(c.id)}" data-key="${i + 1}">${esc(c.label)}</button>`).join("")}</div>`;
     }
-    return `${route(s.index, s.length)}
+    return `${shiftTop(s.index, s.length)}
       ${headline}
       <div class="say"><div class="bubble">${esc(card.say)}</div>${rookie(follow ? "proud" : "up", 78)}</div>
       <div class="ticket ${swipes ? "swipes" : ""}" ${swipes ? "data-swipe" : ""}>${upper(card, faceText(card))}<div class="tear"></div><div class="stub">${stub}</div></div>
@@ -320,7 +326,7 @@
     const s = state.session;
     const headline = HEADLINE[record.outcome];
     const text = card.dependsOn ? (card.headlines ? card.headlines[state.answers[card.dependsOn].choice] : faceText(card)) : faceText(card);
-    return `${route(s.index + 1, s.length)}
+    return `${shiftTop(s.index + 1, s.length)}
       <div class="head-row"><h1 class="big ${headline.length > 14 ? "long" : ""}">${esc(headline)}</h1>${rookie(MOOD[record.outcome], 84)}</div>
       <div class="ticket result"><div class="upper"><span class="tag">${esc(card.area)}</span><p class="case-text">${esc(text)}</p></div><div class="tear"></div><div class="stub"><div class="stamp-row">${resultStamp(card, record)}</div></div></div>
       <div class="body">${resultBody(card, record)}</div>
@@ -395,13 +401,8 @@
     } catch {
       /* As with the game's own state. */
     }
-    if (startShift && state.session.phase === PHASE.INTRO) {
-      buzz(18);
-      step(EVENT.START);
-      skipFollowUps();
-      save();
-    }
-    render();
+    if (startShift) startOrContinue();
+    else render();
   }
 
   function tourAnswered(card, choice) {
@@ -494,6 +495,35 @@
   }
 
   let shownAt = Date.now();
+  let atHome = false;
+
+  function startOrContinue() {
+    if (state.session.phase === PHASE.INTRO) {
+      buzz(18);
+      step(EVENT.START);
+      skipFollowUps();
+      save();
+    }
+    atHome = false;
+    render();
+  }
+
+  function startOver() {
+    state = fresh();
+    state.session.length = call("shift_length", DECK.shifts[0].cards.length);
+    atHome = false;
+    save();
+    render();
+  }
+
+  // Starting over clears the device, so it asks first if there is anything to lose.
+  function askStartOver() {
+    if (!Object.keys(state.answers).length && state.session.phase === PHASE.INTRO && state.shift === 0) {
+      startOver();
+      return;
+    }
+    openSheet(`<h2>Start over?</h2><p>This clears your answers, streak and title on this device, and goes back to the first shift.</p><div class="sheet-actions"><button data-close>Keep my answers</button><button class="go" data-confirm-reset>Start over</button></div>`);
+  }
 
   function drawTour() {
     const view = renderTour();
@@ -522,7 +552,7 @@
     let at;
     let surface;
     let card = null;
-    if (s.phase === PHASE.INTRO) {
+    if (s.phase === PHASE.INTRO || atHome) {
       at = "home"; surface = "asking"; html = renderHome();
     } else if (s.phase === PHASE.DONE) {
       at = "report"; surface = "report"; html = renderReport();
@@ -723,10 +753,9 @@
     }
     const card = state.session.phase === PHASE.ASKING || state.session.phase === PHASE.REVEALED ? currentCard() : null;
     if (target.dataset.start !== undefined) {
-      buzz(18);
-      step(EVENT.START);
-      skipFollowUps();
-      save();
+      startOrContinue();
+    } else if (target.dataset.home !== undefined) {
+      atHome = true;
       render();
     } else if (target.dataset.choice) {
       choose(card, target.dataset.choice, target.dataset.side || null);
@@ -746,10 +775,7 @@
     } else if (target.dataset.copy !== undefined) {
       copyAnswers(target);
     } else if (target.dataset.reset !== undefined) {
-      state = fresh();
-      state.session.length = call("shift_length", DECK.shifts[0].cards.length);
-      save();
-      render();
+      askStartOver();
     }
   });
 
@@ -758,6 +784,10 @@
     if (e.target === sheet) sheet.close();
     if (!target) return;
     if (target.dataset.close !== undefined) sheet.close();
+    if (target.dataset.confirmReset !== undefined) {
+      sheet.close();
+      startOver();
+    }
     if (target.dataset.saveDepends !== undefined) {
       const note = sheet.querySelector("#note").value.trim();
       const card = byId[sheet.dataset.card];
@@ -783,7 +813,7 @@
   document.addEventListener("keydown", (e) => {
     usingKeys = true;
     if (sheet.open || e.target.matches?.("input, textarea")) return;
-    if (tour ? tourStep() !== "case" : state.session.phase !== PHASE.ASKING) return;
+    if (tour ? tourStep() !== "case" : atHome || state.session.phase !== PHASE.ASKING) return;
     const card = tour ? practiceCard : currentCard();
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       const button = app.querySelector(`[data-side="${e.key === "ArrowLeft" ? "left" : "right"}"]`);

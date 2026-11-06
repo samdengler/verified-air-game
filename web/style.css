@@ -158,6 +158,14 @@ a.main { display: flex; align-items: center; justify-content: center; text-decor
 .fine { flex: none; font-size: var(--type-label); line-height: 1.25; font-weight: 500; }
 .row { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
+/* Home, from inside a shift */
+.shift-top { flex: none; display: flex; align-items: center; gap: 6px; margin-left: -8px; }
+.shift-top .route { flex: 1 1 auto; width: auto; min-width: 0; }
+.home-button { flex: none; width: var(--touch-target); height: var(--touch-target); display: grid; place-items: center; padding: 0; border: 0; border-radius: 14px; background: transparent; color: inherit; }
+.home-button svg { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.secondary { flex: none; width: 100%; min-height: 50px; border: 2px solid currentColor; border-radius: 20px; background: transparent; color: inherit; font-size: min(19px, 4.8vw); font-weight: 750; }
+
 /* Tour */
 .tour-gap { flex: 1 1 auto; }
 .tour-items { flex: none; display: flex; flex-direction: column; gap: 14px; }

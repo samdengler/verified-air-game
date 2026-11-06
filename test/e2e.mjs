@@ -241,6 +241,31 @@ async function main() {
     await page.shot("04-same-call");
     await fits(page, "same call");
 
+    // Home leaves the shift at any point, and nothing is lost.
+    await page.tap("[data-home]");
+    await at(page, "home");
+    await settle();
+    await page.shot("04a-home-during-shift");
+    await fits(page, "home during a shift");
+    assert.match(await page.eval(`document.querySelector("[data-start]").textContent`), /^Continue first shift$/);
+    assert.match(await page.eval(`document.querySelector(".sub").textContent`), /^Case 1 of 5\./);
+    assert.equal(await page.eval(`Object.keys(window.__game.state.answers).length`), 1, "going home keeps the answer");
+    await page.tap("[data-start]");
+    await at(page, "result", "accept-at-expiry");
+
+    // Starting over asks first, and keeping your answers keeps them.
+    await page.tap("[data-home]");
+    await at(page, "home");
+    await page.tap("[data-reset]");
+    await page.until(`document.getElementById("sheet").open`, "the start over sheet");
+    await settle();
+    await page.shot("04b-start-over");
+    await page.tap("[data-close]");
+    await page.until(`!document.getElementById("sheet").open`, "the sheet to close");
+    assert.equal(await page.eval(`Object.keys(window.__game.state.answers).length`), 1, "keeping your answers keeps them");
+    await page.tap("[data-start]");
+    await at(page, "result", "accept-at-expiry");
+
     // Sides swap on the next case, so swiping left now picks the other kind of answer.
     await page.tap("[data-next]");
     await at(page, "case", "declined-card");
@@ -282,6 +307,7 @@ async function main() {
     await at(page, "result", "late-capture-result");
     await page.tap("[data-next]");
     await at(page, "report");
+    assert.equal(await page.eval(`document.querySelector("[data-home]")`), null, "the report has its own way home");
     await settle();
     await page.shot("09-report");
     assert.equal(await page.eval(`document.querySelectorAll(".tile").length`), 5);
@@ -361,6 +387,23 @@ async function main() {
     await at(page, "case", "accept-at-expiry");
     await page.send("Input.dispatchKeyEvent", { type: "keyDown", key: "ArrowLeft", code: "ArrowLeft" });
     await at(page, "result", "accept-at-expiry");
+
+    // Keys do nothing to the shift while the home screen shows, and starting over clears everything.
+    await page.tap("[data-next]");
+    await at(page, "case", "declined-card");
+    await page.tap("[data-home]");
+    await at(page, "home");
+    await page.send("Input.dispatchKeyEvent", { type: "keyDown", key: "ArrowLeft", code: "ArrowLeft" });
+    await settle();
+    await at(page, "home");
+    assert.equal(await page.eval(`Object.keys(window.__game.state.answers).length`), 1, "a key press at home answers nothing");
+    await page.tap("[data-reset]");
+    await page.until(`document.getElementById("sheet").open`, "the start over sheet");
+    await page.tap("[data-confirm-reset]");
+    await at(page, "home");
+    assert.equal(await page.eval(`Object.keys(window.__game.state.answers).length`), 0, "starting over clears the answers");
+    assert.equal(await page.eval(`window.__game.state.session.phase`), 0, "starting over ends the shift");
+    assert.match(await page.eval(`document.querySelector("[data-start]").textContent`), /^Start first shift$/);
 
     assert.deepEqual(page.problems.filter((p) => !/fonts\.g|navigator\.vibrate/.test(p)), []);
     console.log(`ok: played both shifts with touch at ${WIDTH}x${HEIGHT}. Screenshots are in ${OUT}`);

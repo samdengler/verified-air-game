@@ -192,6 +192,19 @@ async function playApp(page, url, measure) {
   await swipe("left");
   await app("result");
   await screen("same call");
+  // Going home keeps the shift, and starting over asks first.
+  await click("[data-home]");
+  await app("home");
+  await screen("home during a shift");
+  await click("[data-reset]");
+  await until(page, () => document.getElementById("sheet").open);
+  await screen("start over");
+  await click("[data-close]");
+  await until(page, () => !document.getElementById("sheet").open);
+  const kept = await page.evaluate(() => Object.keys(window.__game.state.answers).length);
+  if (kept !== 1) throw new Error(`going home kept ${kept} answers`);
+  await click("[data-start]");
+  await app("result");
   await click("[data-next]");
   await onCard("declined-card");
   await swipe("left");

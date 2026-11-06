@@ -21,7 +21,7 @@ Twelve of the eighteen mechanics below are fully built. Two more are partly buil
 | Short shift | Attention is the scarce resource | Five cases with no timer, and then the game stops | `new_respects_limit`, `every_shift_finishes` | Built |
 | Blind call | A reward for being right teaches agreement | A case shows nothing about the rule's result until you answer | `face_hides_outcome` | Built |
 | Swapped sides | Habit can replace reading | Answers change sides between cases, and a yes stays on the right | `sides_balance_across_seeds`, `yes_stays_on_the_right` | Built |
-| Ways out | [Fixation on the game hurts](https://arxiv.org/abs/2203.16175) | "It depends" and "Not my area" work on every case, at no cost | `escapes_always_work`, `no_dead_ends` | Built |
+| Ways out | [Fixation on the game hurts](https://arxiv.org/abs/2203.16175) | "It depends" and "Not my area" work on every case, at no cost. A home button leaves a shift at any point and keeps your answers | `escapes_always_work`, `no_dead_ends` | Built |
 | Check cards | A direct test of care | A rule changed to be wrong. Flagging it says so | `recording_keeps_title` | Built |
 | Route map | [Duolingo's path](https://blog.duolingo.com/new-duolingo-home-screen-design/) and Lean's goals left | A route across the areas, with open goals counted by the build | None needed | Built |
 | Weekly streak | [Duolingo's streak](https://blog.duolingo.com/improving-the-streak) | One case a week keeps it, and "Not my area" counts | `one_answer_extends` | Built, on the device |

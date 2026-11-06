@@ -33,6 +33,7 @@ A phone game for reviewing the Verified Air rules, with its own Lean model. The 
 - An answer changes no status. Don't write copy that implies it does.
 - Rookie calls the expert Coach. Rookie's mistakes belong to the rulebook, and the game never tells an expert they are wrong.
 - The game is called Gate Check. Internal names such as `review_game`, `review-game-*` and the `RG-` requirement IDs keep the old name, because renaming them means redoing the Rust proof.
+- Going home from a shift is navigation in the page. It changes nothing in the session, so it is not an event in the model. Starting over clears the device, so it asks first.
 - Rookie is a little jet, drawn once in `web/rookie.js`. Its eyes stay round and open in every mood, and it wears no cap: an earlier version with closed curved eyes and a cap could read as an ethnic caricature. Check any new character for that.
 - Reward what cannot be farmed: nothing pays for volume or speed.
 - Quote nothing from the EASD guide. Say "an example shows the rule breaking it", never "Lean found".

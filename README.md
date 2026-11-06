@@ -19,6 +19,8 @@ npm start
 
 A first visit starts with a short tour, which practises on a real rule and records nothing. It is on the home screen afterwards, and `?tour` opens it directly.
 
+The house at the top of a case or result goes home. The shift stays where it was, and the home screen offers to continue it. Start over clears the device, so it asks first.
+
 Swipe a ticket toward your call, or tap a sign. On a keyboard, use the left and right arrows, 1 to 4 for a list of choices, D for "It depends" and N for "Not my area".
 
 To check a phone, open "Behind this card" on any result and run the check. It replays every case the model wrote through the engine running on that device.
