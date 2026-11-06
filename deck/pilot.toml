@@ -24,6 +24,9 @@ shifts = [
   { name = "Second shift", cards = ["refund-rule", "late-payment-check", "removal-status", "expiry-drift", "zero-commitment"] },
 ]
 
+# The case the tour practises on.
+practice = "practice-before-expiry"
+
 [[card]]
 id = "accept-at-expiry"
 kind = "predict"
@@ -199,4 +202,23 @@ top_ranked = true
 choices = [
   { id = "ready", label = "READY TO PROCEED, as for a paid item" },
   { id = "confirmed", label = "They stay CONFIRMED" },
+]
+
+# The tour's practice case. It is in no shift, so practising gives no case away.
+[[card]]
+id = "practice-before-expiry"
+kind = "predict"
+area = "Practice case"
+label = "Accepting an offer before its expiry"
+case = "An offer is valid until 12:00 UTC. The customer accepts it at 11:59 UTC."
+question = "What happens?"
+say = "Practice time. What do I do, Coach?"
+short = "The customer accepts the offer a minute before it expires."
+fields = [{ label = "Valid until", value = "12:00" }, { label = "Accepted", value = "11:59" }]
+example = "Rules.OfferOrder.acceptBeforeExpiry"
+requires = ["Except.ok"]
+criterion = "OO-001.4"
+choices = [
+  { id = "created", label = "Create the order", model = true, stamp = "ORDERED" },
+  { id = "rejected", label = "Reject it as expired", stamp = "REJECTED" },
 ]

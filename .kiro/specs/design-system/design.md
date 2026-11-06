@@ -10,7 +10,7 @@ The tokens and rules every screen must follow. Documentation, code and UI checks
 
 Read from the compiled Lean types.
 
-- `Token`, one of: `deltaBlue`, `navy`, `navyRaised`, `bright`, `red`, `redDark`, `ice`, `paper`, `white`, `mute`, `tint`, `rookieCheek`
+- `Token`, one of: `airlineBlue`, `navy`, `navyRaised`, `bright`, `red`, `redDark`, `ice`, `paper`, `white`, `mute`, `tint`, `rookieCheek`
 - `Use`, one of: `text`, `largeText`, `graphic`
 - `Pair`, a structure: `fg: Design.Token`, `bg: Design.Token`, `use: Design.Use`
 - `Surface`, one of: `asking`, `decision`, `sameCall`, `possibleCatch`, `consequence`, `report`, `panel`

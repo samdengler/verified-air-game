@@ -5,16 +5,16 @@ import Design.Contrast
 namespace Design
 
 inductive Token where
-  | deltaBlue | navy | navyRaised | bright | red | redDark | ice | paper | white | mute | tint
+  | airlineBlue | navy | navyRaised | bright | red | redDark | ice | paper | white | mute | tint
   | rookieCheek
   deriving DecidableEq, Repr, Inhabited
 
 def Token.all : List Token :=
-  [.deltaBlue, .navy, .navyRaised, .bright, .red, .redDark, .ice, .paper, .white, .mute, .tint,
+  [.airlineBlue, .navy, .navyRaised, .bright, .red, .redDark, .ice, .paper, .white, .mute, .tint,
     .rookieCheek]
 
 def Token.color : Token → Color
-  | .deltaBlue => ⟨0x00, 0x32, 0x68⟩
+  | .airlineBlue => ⟨0x00, 0x32, 0x68⟩
   | .navy => ⟨0x00, 0x21, 0x4A⟩
   | .navyRaised => ⟨0x0B, 0x3A, 0x75⟩
   | .bright => ⟨0x0C, 0x5F, 0xB8⟩
@@ -29,14 +29,14 @@ def Token.color : Token → Color
 
 /-- The token's name in every generated format. -/
 def Token.name : Token → String
-  | .deltaBlue => "delta-blue" | .navy => "navy" | .navyRaised => "navy-raised"
+  | .airlineBlue => "airline-blue" | .navy => "navy" | .navyRaised => "navy-raised"
   | .bright => "bright" | .red => "red" | .redDark => "red-dark" | .ice => "ice"
   | .paper => "paper" | .white => "white" | .mute => "mute" | .tint => "tint"
   | .rookieCheek => "rookie-cheek"
 
 /-- What the token is for, in the generated documentation. -/
 def Token.purpose : Token → String
-  | .deltaBlue => "Ground while a case is asking"
+  | .airlineBlue => "Ground while a case is asking"
   | .navy => "Ink on light grounds, and the ground for decisions and the report"
   | .navyRaised => "Tracks and lines on navy"
   | .bright => "Ground for a same call"
@@ -85,7 +85,7 @@ def Surface.name : Surface → String
   | .report => "report" | .panel => "panel"
 
 def Surface.ground : Surface → Token
-  | .asking => .deltaBlue
+  | .asking => .airlineBlue
   | .decision | .report => .navy
   | .sameCall => .bright
   | .possibleCatch => .red

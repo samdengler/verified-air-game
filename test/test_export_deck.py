@@ -131,6 +131,20 @@ class ExportTests(unittest.TestCase):
     def test_a_prediction_needs_exactly_one_model_result(self):
         self.assert_stops("exactly one choice", predict(choices=[{"id": "a", "label": "A"}, {"id": "b", "label": "B"}]))
 
+    def test_stops_when_the_practice_case_is_in_a_shift(self):
+        deck = {"title": "T", "card": [predict()], "shifts": [{"name": "First", "cards": ["p"]}], "practice": "p"}
+        with self.assertRaisesRegex(DeckError, "give a blind call away"):
+            build_deck(deck, source(), {"commit": "abc"})
+
+    def test_a_practice_case_outside_the_shifts_is_kept(self):
+        deck = {"title": "T", "card": [predict()], "shifts": [{"name": "First", "cards": []}], "practice": "p"}
+        self.assertEqual(build_deck(deck, source(), {"commit": "abc"})["practice"], "p")
+
+    def test_stops_on_an_unknown_practice_case(self):
+        deck = {"title": "T", "card": [predict()], "shifts": [], "practice": "gone"}
+        with self.assertRaisesRegex(DeckError, "unknown card gone"):
+            build_deck(deck, source(), {"commit": "abc"})
+
     def test_a_check_card_needs_a_proven_rule(self):
         decls = copy.deepcopy(DECLS)
         decls["Rules.Example.rule"]["criteria"][0]["status"] = "open"

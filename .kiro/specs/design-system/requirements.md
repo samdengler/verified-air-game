@@ -18,7 +18,7 @@ Each criterion carries where it comes from. *modelled* means the sentence was co
 
 #### Acceptance Criteria
 
-1. WHEN white is used for text on delta-blue THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 12.67 to 1.
+1. WHEN white is used for text on airline-blue THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 12.67 to 1.
    - DS-001.1, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
 2. WHEN white is used for text on navy THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 15.95 to 1.
@@ -39,10 +39,10 @@ Each criterion carries where it comes from. *modelled* means the sentence was co
 7. WHEN navy is used for text on ice THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 13.59 to 1.
    - DS-001.7, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
-8. WHEN delta-blue is used for text on paper THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 12.35 to 1.
+8. WHEN airline-blue is used for text on paper THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 12.35 to 1.
    - DS-001.8, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
-9. WHEN delta-blue is used for text on white THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 12.67 to 1.
+9. WHEN airline-blue is used for text on white THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 12.67 to 1.
    - DS-001.9, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
 10. WHEN mute is used for text on paper THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 6.29 to 1.
@@ -60,7 +60,7 @@ Each criterion carries where it comes from. *modelled* means the sentence was co
 14. WHEN red is used for large text on ice THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 4.07 to 1.
    - DS-001.14, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
-15. WHEN white is used for graphics on delta-blue THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 12.67 to 1.
+15. WHEN white is used for graphics on airline-blue THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 12.67 to 1.
    - DS-001.15, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
 16. WHEN white is used for graphics on navy THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 15.95 to 1.
@@ -75,7 +75,7 @@ Each criterion carries where it comes from. *modelled* means the sentence was co
 19. WHEN red is used for graphics on paper THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 4.65 to 1.
    - DS-001.19, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
-20. WHEN delta-blue is used for graphics on paper THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 12.35 to 1.
+20. WHEN airline-blue is used for graphics on paper THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 12.35 to 1.
    - DS-001.20, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
 21. WHEN red is used for graphics on navy THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 3.33 to 1.
@@ -84,7 +84,7 @@ Each criterion carries where it comes from. *modelled* means the sentence was co
 22. WHEN navy is used for graphics on ice THE SYSTEM SHALL keep a contrast of at least 3.00 to 1, and this pair measures at least 13.59 to 1.
    - DS-001.22, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
-23. WHEN delta-blue is used for text on tint THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 10.63 to 1.
+23. WHEN airline-blue is used for text on tint THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 10.63 to 1.
    - DS-001.23, modelled
    - Read by running `Pair.low` (model/Design/Tokens.lean:69), and checked in every engine by the vectors
 24. WHEN navy is used for text on tint THE SYSTEM SHALL keep a contrast of at least 4.50 to 1, and this pair measures at least 13.37 to 1.
@@ -119,11 +119,11 @@ Each criterion carries where it comes from. *modelled* means the sentence was co
 
 #### Acceptance Criteria
 
-1. IF red would be used for graphics on delta-blue THEN THE SYSTEM SHALL treat it as a defect, because it measures below 3.00 to 1.
+1. IF red would be used for graphics on airline-blue THEN THE SYSTEM SHALL treat it as a defect, because it measures below 3.00 to 1.
    - DS-002.1, proven
    - Theorem `forbidden_pairs_fail` (model/Design/Rules.lean:30)
    - Lean: `Design.forbiddenPairs.all Design.Pair.fails = true`
-2. IF red would be used for text on delta-blue THEN THE SYSTEM SHALL treat it as a defect, because it measures below 4.50 to 1.
+2. IF red would be used for text on airline-blue THEN THE SYSTEM SHALL treat it as a defect, because it measures below 4.50 to 1.
    - DS-002.2, proven
    - Theorem `forbidden_pairs_fail` (model/Design/Rules.lean:30)
    - Lean: `Design.forbiddenPairs.all Design.Pair.fails = true`
@@ -131,7 +131,7 @@ Each criterion carries where it comes from. *modelled* means the sentence was co
    - DS-002.3, proven
    - Theorem `forbidden_pairs_fail` (model/Design/Rules.lean:30)
    - Lean: `Design.forbiddenPairs.all Design.Pair.fails = true`
-4. IF bright would be used for graphics on delta-blue THEN THE SYSTEM SHALL treat it as a defect, because it measures below 3.00 to 1.
+4. IF bright would be used for graphics on airline-blue THEN THE SYSTEM SHALL treat it as a defect, because it measures below 3.00 to 1.
    - DS-002.4, proven
    - Theorem `forbidden_pairs_fail` (model/Design/Rules.lean:30)
    - Lean: `Design.forbiddenPairs.all Design.Pair.fails = true`

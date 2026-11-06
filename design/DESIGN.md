@@ -8,7 +8,7 @@ Every value below is read from the Lean model, and every rule is a theorem Lean 
 
 | Token | Value | Purpose |
 | --- | --- | --- |
-| `delta-blue` | `#003268` | Ground while a case is asking |
+| `airline-blue` | `#003268` | Ground while a case is asking |
 | `navy` | `#00214A` | Ink on light grounds, and the ground for decisions and the report |
 | `navy-raised` | `#0B3A75` | Tracks and lines on navy |
 | `bright` | `#0C5FB8` | Ground for a same call |
@@ -25,7 +25,7 @@ Every value below is read from the Lean model, and every rule is a theorem Lean 
 
 | Surface | Ground | Ink | Focus ring |
 | --- | --- | --- | --- |
-| asking | `delta-blue` | `white` | `white` |
+| asking | `airline-blue` | `white` | `white` |
 | decision | `navy` | `white` | `white` |
 | same-call | `bright` | `white` | `white` |
 | possible-catch | `red` | `white` | `white` |
@@ -39,29 +39,29 @@ The contrast shown is a lower bound from exact arithmetic.
 
 | Colour | On | For | Needs | Measures at least |
 | --- | --- | --- | --- | --- |
-| `white` | `delta-blue` | text | 4.50 | 12.67 |
+| `white` | `airline-blue` | text | 4.50 | 12.67 |
 | `white` | `navy` | text | 4.50 | 15.95 |
 | `white` | `bright` | text | 4.50 | 6.27 |
 | `white` | `red` | text | 4.50 | 4.77 |
 | `navy` | `paper` | text | 4.50 | 15.53 |
 | `navy` | `white` | text | 4.50 | 15.95 |
 | `navy` | `ice` | text | 4.50 | 13.59 |
-| `delta-blue` | `paper` | text | 4.50 | 12.35 |
-| `delta-blue` | `white` | text | 4.50 | 12.67 |
+| `airline-blue` | `paper` | text | 4.50 | 12.35 |
+| `airline-blue` | `white` | text | 4.50 | 12.67 |
 | `mute` | `paper` | text | 4.50 | 6.29 |
 | `red` | `paper` | text | 4.50 | 4.65 |
 | `red` | `white` | text | 4.50 | 4.77 |
 | `white` | `red-dark` | text | 4.50 | 8.22 |
 | `red` | `ice` | large text | 3.00 | 4.07 |
-| `white` | `delta-blue` | graphics | 3.00 | 12.67 |
+| `white` | `airline-blue` | graphics | 3.00 | 12.67 |
 | `white` | `navy` | graphics | 3.00 | 15.95 |
 | `white` | `bright` | graphics | 3.00 | 6.27 |
 | `white` | `red` | graphics | 3.00 | 4.77 |
 | `red` | `paper` | graphics | 3.00 | 4.65 |
-| `delta-blue` | `paper` | graphics | 3.00 | 12.35 |
+| `airline-blue` | `paper` | graphics | 3.00 | 12.35 |
 | `red` | `navy` | graphics | 3.00 | 3.33 |
 | `navy` | `ice` | graphics | 3.00 | 13.59 |
-| `delta-blue` | `tint` | text | 4.50 | 10.63 |
+| `airline-blue` | `tint` | text | 4.50 | 10.63 |
 | `navy` | `tint` | text | 4.50 | 13.37 |
 | `mute` | `tint` | text | 4.50 | 5.42 |
 | `white` | `navy-raised` | graphics | 3.00 | 11.19 |
@@ -74,10 +74,10 @@ The contrast shown is an upper bound, so these fail on any rounding.
 
 | Colour | On | For | Needs | Measures at most |
 | --- | --- | --- | --- | --- |
-| `red` | `delta-blue` | graphics | 3.00 | 2.66 |
-| `red` | `delta-blue` | text | 4.50 | 2.66 |
+| `red` | `airline-blue` | graphics | 3.00 | 2.66 |
+| `red` | `airline-blue` | text | 4.50 | 2.66 |
 | `bright` | `navy` | graphics | 3.00 | 2.55 |
-| `bright` | `delta-blue` | graphics | 3.00 | 2.02 |
+| `bright` | `airline-blue` | graphics | 3.00 | 2.02 |
 | `red` | `navy-raised` | graphics | 3.00 | 2.35 |
 | `red` | `ice` | text | 4.50 | 4.08 |
 

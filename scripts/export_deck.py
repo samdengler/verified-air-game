@@ -306,6 +306,18 @@ def check_shifts(shifts, cards):
             seen.add(card_id)
 
 
+def check_practice(practice, shifts, cards):
+    by_id = {card["id"]: card for card in cards}
+    if practice not in by_id:
+        raise DeckError(f"practice: unknown card {practice}")
+    for shift in shifts:
+        if practice in shift["cards"]:
+            raise DeckError(f"practice: {practice} is in {shift['name']}, so practising would give a blind call away")
+    card = by_id[practice]
+    if card.get("dependsOn") or len(card["choices"]) != 2:
+        raise DeckError(f"practice: {practice} must stand alone with two choices")
+
+
 def build_deck(raw_deck, src, meta):
     cards = []
     ids = set()
@@ -323,13 +335,17 @@ def build_deck(raw_deck, src, meta):
                 raise DeckError(f"{card['id']}: points at unknown card {ref}")
     shifts = raw_deck.get("shifts", [{"name": "Shift", "cards": [card["id"] for card in cards]}])
     check_shifts(shifts, cards)
-    return {
+    deck = {
         "title": raw_deck["title"],
         "source": meta,
         "areas": open_goals(src, raw_deck.get("route", [])),
         "shifts": shifts,
         "cards": cards,
     }
+    if "practice" in raw_deck:
+        check_practice(raw_deck["practice"], shifts, cards)
+        deck["practice"] = raw_deck["practice"]
+    return deck
 
 
 def load_source(root):

@@ -18,7 +18,7 @@ h1 { margin: 0; font-size: 40px; letter-spacing: -0.8px; }
 .say { display: flex; gap: 10px; align-items: center; min-height: 92px; }
 .bubble { flex: 1; background: var(--color-paper); color: var(--color-navy); border-radius: 16px; padding: 10px 13px; font-size: 16px; line-height: 1.2; font-weight: 700; }
 .ticket { flex: 1; min-height: 0; background: var(--color-paper); color: var(--color-navy); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; }
-.ticket .tag { align-self: flex-start; background: var(--color-ice); color: var(--color-delta-blue); padding: 4px 10px; border-radius: 10px; font-size: 14px; font-weight: 750; }
+.ticket .tag { align-self: flex-start; background: var(--color-ice); color: var(--color-airline-blue); padding: 4px 10px; border-radius: 10px; font-size: 14px; font-weight: 750; }
 .ticket p { margin: 0; font-size: 21px; line-height: 1.16; font-weight: 750; }
 .stamp { align-self: center; margin-top: auto; padding: 3px 12px 1px; border: 4px solid currentColor; border-radius: 10px; font-family: "Saira Stencil One", Impact, sans-serif; font-size: 30px; transform: rotate(-4deg); color: var(--color-red); }
 .big { margin: 0; font-size: 44px; line-height: 0.96; font-weight: 800; letter-spacing: -1px; }

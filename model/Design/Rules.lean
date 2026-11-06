@@ -9,26 +9,26 @@ namespace Design
 
 /-- Every pair of colours the UI may use. Anything else is a defect. -/
 def allowedPairs : List Pair :=
-  [ ⟨.white, .deltaBlue, .text⟩, ⟨.white, .navy, .text⟩, ⟨.white, .bright, .text⟩, ⟨.white, .red, .text⟩,
+  [ ⟨.white, .airlineBlue, .text⟩, ⟨.white, .navy, .text⟩, ⟨.white, .bright, .text⟩, ⟨.white, .red, .text⟩,
     ⟨.navy, .paper, .text⟩, ⟨.navy, .white, .text⟩, ⟨.navy, .ice, .text⟩,
-    ⟨.deltaBlue, .paper, .text⟩, ⟨.deltaBlue, .white, .text⟩, ⟨.mute, .paper, .text⟩,
+    ⟨.airlineBlue, .paper, .text⟩, ⟨.airlineBlue, .white, .text⟩, ⟨.mute, .paper, .text⟩,
     ⟨.red, .paper, .text⟩, ⟨.red, .white, .text⟩, ⟨.white, .redDark, .text⟩,
     ⟨.red, .ice, .largeText⟩,
-    ⟨.white, .deltaBlue, .graphic⟩, ⟨.white, .navy, .graphic⟩, ⟨.white, .bright, .graphic⟩, ⟨.white, .red, .graphic⟩,
-    ⟨.red, .paper, .graphic⟩, ⟨.deltaBlue, .paper, .graphic⟩, ⟨.red, .navy, .graphic⟩,
+    ⟨.white, .airlineBlue, .graphic⟩, ⟨.white, .navy, .graphic⟩, ⟨.white, .bright, .graphic⟩, ⟨.white, .red, .graphic⟩,
+    ⟨.red, .paper, .graphic⟩, ⟨.airlineBlue, .paper, .graphic⟩, ⟨.red, .navy, .graphic⟩,
     ⟨.navy, .ice, .graphic⟩,
-    ⟨.deltaBlue, .tint, .text⟩, ⟨.navy, .tint, .text⟩, ⟨.mute, .tint, .text⟩,
+    ⟨.airlineBlue, .tint, .text⟩, ⟨.navy, .tint, .text⟩, ⟨.mute, .tint, .text⟩,
     ⟨.white, .navyRaised, .graphic⟩, ⟨.navy, .white, .graphic⟩, ⟨.red, .white, .graphic⟩ ]
 
 /-- Pairs the UI must not use for the use shown. -/
 def forbiddenPairs : List Pair :=
-  [ ⟨.red, .deltaBlue, .graphic⟩, ⟨.red, .deltaBlue, .text⟩, ⟨.bright, .navy, .graphic⟩,
-    ⟨.bright, .deltaBlue, .graphic⟩, ⟨.red, .navyRaised, .graphic⟩, ⟨.red, .ice, .text⟩ ]
+  [ ⟨.red, .airlineBlue, .graphic⟩, ⟨.red, .airlineBlue, .text⟩, ⟨.bright, .navy, .graphic⟩,
+    ⟨.bright, .airlineBlue, .graphic⟩, ⟨.red, .navyRaised, .graphic⟩, ⟨.red, .ice, .text⟩ ]
 
 theorem allowed_pairs_pass : allowedPairs.all Pair.passes = true := by decide +kernel
 
 /-- Each forbidden pair fails on the most generous rounding, so the ban is not a
-matter of taste. Red on Delta blue is the main one: the two brand colours together
+matter of taste. Red on airline blue is the main one: the two brand colours together
 do not reach 3 to 1. -/
 theorem forbidden_pairs_fail : forbiddenPairs.all Pair.fails = true := by decide +kernel
 
@@ -48,7 +48,7 @@ WCAG sets no number for this, so 125 is our own choice. -/
 def surfaceBar : Nat := 125
 
 /-- The grounds a person has to tell apart at a glance. -/
-def resultGrounds : List Token := [.deltaBlue, .bright, .red, .navy, .ice]
+def resultGrounds : List Token := [.airlineBlue, .bright, .red, .navy, .ice]
 
 /-- Result grounds differ in lightness as well as hue, so colour is never the only signal. -/
 theorem result_grounds_differ_in_lightness :

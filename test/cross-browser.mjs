@@ -161,6 +161,31 @@ async function playApp(page, url, measure) {
   await until(page, "window.__game !== undefined");
   await app("home");
   await screen("home");
+  // The tour: every step measured, both results shown, and nothing recorded.
+  const tourAt = (step) => until(page, (s) => document.getElementById("app").dataset.tour === s, step, 15000);
+  await click("[data-tour]");
+  await tourAt("hello");
+  await screen("tour hello");
+  await click("[data-tour-next]");
+  await tourAt("case");
+  await screen("tour case");
+  await click('[data-choice="rejected"]');
+  await tourAt("result");
+  await screen("tour possible catch");
+  await click("[data-tour-back]");
+  await tourAt("case");
+  await click('[data-choice="created"]');
+  await tourAt("result");
+  await screen("tour same call");
+  for (const step of ["ways-out", "path", "counts", "ready"]) {
+    await click("[data-tour-next]");
+    await tourAt(step);
+    await screen(`tour ${step}`);
+  }
+  await click("[data-tour-leave]");
+  await app("home");
+  const recorded = await page.evaluate(() => Object.keys(window.__game.state.answers).length);
+  if (recorded) throw new Error(`the tour recorded ${recorded} answers`);
   await click("[data-start]");
   await onCard("accept-at-expiry");
   await screen("case");

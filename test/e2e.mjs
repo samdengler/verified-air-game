@@ -155,7 +155,16 @@ async function main() {
     const { webSocketDebuggerUrl } = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
     const ws = new WebSocket(webSocketDebuggerUrl);
     await new Promise((resolve) => ws.addEventListener("open", resolve));
-    const page = await open(ws, `${base}?seed=2&fresh`);
+    // An expert's first visit starts with the tour, once.
+    const page = await open(ws, base);
+    await at(page, "tour");
+    assert.equal(await page.eval(`document.getElementById("app").dataset.tour`), "hello");
+    await page.tap("[data-tour-leave]");
+    await at(page, "home");
+    await go(page, base);
+    await at(page, "home");
+    await go(page, `${base}?seed=2&fresh`);
+    await at(page, "home");
 
     assert.equal(await page.eval(`window.__game.engine`), "Lean", "the Lean engine should load");
     const check = await page.eval(`window.__game.selfCheck()`);
@@ -164,6 +173,47 @@ async function main() {
     await settle();
     await page.shot("01-home");
     await fits(page, "home");
+
+    // The tour: a real swipe on a practice case that nothing records.
+    const tourAt = (step) => page.until(`document.getElementById("app").dataset.tour === ${JSON.stringify(step)}`, `the tour's ${step} step`);
+    const tourShot = async (step, name) => {
+      await tourAt(step);
+      await settle();
+      await page.shot(name);
+      await fits(page, `tour ${step}`);
+      const seen = await page.eval(`(() => { const a = document.getElementById("app"); return a.scrollHeight - a.clientHeight; })()`);
+      assert.ok(seen <= 1, `tour ${step}: the screen needs ${seen}px of scrolling`);
+    };
+    await page.tap("[data-tour]");
+    await tourShot("hello", "t1-hello");
+    await page.tap("[data-tour-next]");
+    await tourShot("case", "t2-case");
+    let practice = await page.swipe("left", { distance: 150 });
+    await practice();
+    await tourAt("result");
+    const practised = await page.eval(`document.getElementById("app").dataset.outcome`);
+    assert.ok(practised === "0" || practised === "1", "the engine judged the practice answer");
+    await tourShot("result", practised === "0" ? "t3-same-call" : "t3-possible-catch");
+    await page.tap("[data-tour-back]");
+    await tourAt("case");
+    practice = await page.swipe("right", { distance: 150 });
+    await practice();
+    await tourAt("result");
+    assert.notEqual(await page.eval(`document.getElementById("app").dataset.outcome`), practised, "the other sign gives the other result");
+    await tourShot("result", practised === "0" ? "t3-possible-catch" : "t3-same-call");
+    await page.tap("[data-tour-next]");
+    await tourShot("ways-out", "t4-ways-out");
+    await page.tap("[data-tour-next]");
+    await tourShot("path", "t5-path");
+    await page.tap("[data-tour-next]");
+    await tourShot("counts", "t6-counts");
+    await page.tap("[data-tour-next]");
+    await tourShot("ready", "t7-ready");
+    await page.tap("[data-tour-leave]");
+    await at(page, "home");
+    assert.equal(await page.eval(`Object.keys(window.__game.state.answers).length`), 0, "the tour records no answer");
+    assert.equal(await page.eval(`window.__game.state.streak.answered`), false, "the tour keeps no streak");
+    assert.equal(await page.eval(`window.__game.state.checksPassed`), 0, "the tour earns nothing");
 
     // Start the first shift.
     await page.tap("[data-start]");

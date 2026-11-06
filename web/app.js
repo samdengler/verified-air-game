@@ -148,7 +148,7 @@
   const esc = (text) => String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const PLANE = '<rect x="-13" y="-2.8" width="27" height="5.6" rx="2.8"/><path d="M-1 -2 L-7 -13 H-3 L6 -2 Z"/><path d="M-1 2 L-7 13 H-3 L6 2 Z"/><path d="M-11 -2 L-14 -7 H-11 L-7 -2 Z"/><path d="M-11 2 L-14 7 H-11 L-7 2 Z"/>';
 
-  function route(done, total) {
+  function route(done, total, label = `${Math.min(done + 1, total)} of ${total} cases`) {
     const w = 350;
     const at = (t) => [12 + t * (w - 24), 34 - 22 * Math.sin(Math.PI * t)];
     const line = Array.from({ length: 41 }, (_, k) => at(k / 40).map((n) => n.toFixed(1)).join(" ")).join(" L");
@@ -160,7 +160,7 @@
     const [px, py] = at(done / total);
     const slope = (-22 * Math.PI * Math.cos((Math.PI * done) / total)) / (w - 24);
     const angle = (Math.atan(slope) * 180) / Math.PI;
-    return `<svg class="route" viewBox="0 0 ${w} 48" role="img" aria-label="${Math.min(done + 1, total)} of ${total} cases"><path class="line" d="M${line}"/>${dots}<g class="plane" transform="translate(${px.toFixed(1)} ${py.toFixed(1)}) rotate(${angle.toFixed(1)})">${PLANE}</g></svg>`;
+    return `<svg class="route" viewBox="0 0 ${w} 48" role="img" aria-label="${esc(label)}"><path class="line" d="M${line}"/>${dots}<g class="plane" transform="translate(${px.toFixed(1)} ${py.toFixed(1)}) rotate(${angle.toFixed(1)})">${PLANE}</g></svg>`;
   }
 
   function rookie(mood, width) {
@@ -217,6 +217,11 @@
     return swapped ? { left: second, right: first } : { left: first, right: second };
   }
 
+  function signs(card) {
+    const { left, right } = sides(card);
+    return `<div class="answers"><button class="sign left" data-choice="${esc(left.id)}" data-side="left">${arrow("left")}<span>${esc(left.label)}</span></button><button class="sign right" data-choice="${esc(right.id)}" data-side="right">${arrow("right")}<span>${esc(right.label)}</span></button></div>`;
+  }
+
   function renderHome() {
     const shift = DECK.shifts[state.shift];
     const stops = DECK.areas.map((area, i) => {
@@ -231,7 +236,7 @@
       <div class="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M7.6 84 C7.6 71 95.2 71 95.2 58 C95.2 46 4.8 46 4.8 34 C4.8 22 95.2 22 95.2 10"/></svg>${stops}</div>
       <button class="main" data-start>Start ${esc(shift.name.toLowerCase())}</button>
       <p class="fine">Gate Check is a demo. Answers stay on this device. Verified Air is a proof of concept, not affiliated with IATA.</p>
-      <div class="row"><button class="link" data-reset>Start over</button></div>`;
+      <div class="row"><button class="link" data-tour>Take the tour</button><button class="link" data-reset>Start over</button></div>`;
   }
 
   function renderCase(card) {
@@ -247,8 +252,7 @@
         : swipes ? `<p data-hint>Swipe the ticket toward your call, or tap a sign below.</p><div class="ghost" data-ghost></div>` : `<p>Tap your answer below.</p>`;
     let controls;
     if (swipes) {
-      const { left, right } = sides(card);
-      controls = `<div class="answers"><button class="sign left" data-choice="${esc(left.id)}" data-side="left">${arrow("left")}<span>${esc(left.label)}</span></button><button class="sign right" data-choice="${esc(right.id)}" data-side="right">${arrow("right")}<span>${esc(right.label)}</span></button></div>`;
+      controls = signs(card);
     } else {
       controls = `<div class="options">${card.choices.map((c, i) => `<button class="option" data-choice="${esc(c.id)}" data-key="${i + 1}">${esc(c.label)}</button>`).join("")}</div>`;
     }
@@ -354,9 +358,165 @@
       <button class="link" data-copy>Copy my answers</button>`;
   }
 
+  // ------------------------------------------------------------ the tour
+
+  // A practice run through the game. It asks the real engine about a real rule that is in
+  // neither shift, so it gives no case away. It never touches the answers, the streak or the
+  // title. The one thing it remembers is that it has been seen.
+  const TOUR_SEEN = "review-game/toured";
+  const TOUR_STEPS = ["hello", "case", "result", "ways-out", "path", "counts", "ready"];
+  const practiceCard = byId[DECK.practice];
+  let tour = null;
+  const tourStep = () => TOUR_STEPS[tour.step];
+
+  function tourSeen() {
+    try {
+      return localStorage.getItem(TOUR_SEEN) !== null;
+    } catch {
+      return false;
+    }
+  }
+
+  function startTour() {
+    tour = { step: 0, record: null };
+    render();
+  }
+
+  function tourMove(by) {
+    tour.step += by;
+    if (tourStep() === "case") tour.record = null;
+    render();
+  }
+
+  function leaveTour(startShift) {
+    tour = null;
+    try {
+      localStorage.setItem(TOUR_SEEN, "1");
+    } catch {
+      /* As with the game's own state. */
+    }
+    if (startShift && state.session.phase === PHASE.INTRO) {
+      buzz(18);
+      step(EVENT.START);
+      skipFollowUps();
+      save();
+    }
+    render();
+  }
+
+  function tourAnswered(card, choice) {
+    const outcome = call("judge", card.kindCode, choice.response);
+    tour.record = { choice: choice.id, outcome };
+    tour.step += 1;
+    render();
+    feelMoment(call("loudness", outcome));
+  }
+
+  function tourNav(next = true) {
+    const back = tour.step > 0 ? '<button class="link" data-tour-back>Back</button>' : "<span></span>";
+    return `${next ? '<button class="main" data-tour-next>Next</button>' : ""}<div class="row">${back}<button class="link" data-tour-leave>Skip the tour</button></div>`;
+  }
+
+  function tourResult(top) {
+    const card = practiceCard;
+    const { choice, outcome } = tour.record;
+    const said = card.choices.find((c) => c.id === choice);
+    const rulebook = card.choices.find((c) => c.model);
+    const note = outcome === OUTCOME.SAME
+      ? ["A small win", "You and the rulebook agree, so this goal gets coverage.", "If you had disagreed, the whole screen would turn red. That is the big moment."]
+      : ["The big moment", "You and the rulebook disagree. In a real shift this goes to the area owner, and it counts if they uphold it.", "You are never wrong here. Rookie's mistakes belong to the rulebook."];
+    return `${top}
+      <div class="head-row"><h1 class="big ${HEADLINE[outcome].length > 14 ? "long" : ""}">${esc(HEADLINE[outcome])}</h1>${rookie(MOOD[outcome], 84)}</div>
+      <div class="compare"><div><span>Your call</span><b>${esc(said.label)}</b></div><div><span>What the rulebook makes Rookie do</span><b>${esc(rulebook.label)}</b></div></div>
+      <div class="panel"><span>${note[0]}</span><b>${note[1]}</b></div>
+      <p class="fine">${note[2]}</p>
+      <div class="tour-gap"></div>${tourNav()}`;
+  }
+
+  function renderTour() {
+    const total = TOUR_STEPS.length;
+    const top = route(tour.step, total - 1, `Step ${tour.step + 1} of ${total}`);
+    const gap = '<div class="tour-gap"></div>';
+    switch (tourStep()) {
+      case "hello":
+        return { surface: "asking", html: `${top}
+          <div class="head-row"><h1 class="big">Meet Rookie.</h1>${rookie("happy", 92)}</div>
+          <p class="sub">A new hire who follows the rulebook to the letter, even when the result is absurd.</p>
+          <div class="panel"><span>Your job, Coach</span><b>You know how the work really goes. Catch the rulebook before it embarrasses the airline.</b></div>
+          <p class="fine">The rulebook is the airline's rules, written so exactly that a computer can check them.</p>
+          ${gap}${tourNav()}` };
+      case "case":
+        return { surface: "asking", html: `${top}
+          <div class="say"><div class="bubble">${esc(practiceCard.say)}</div>${rookie("up", 78)}</div>
+          <div class="ticket swipes" data-swipe>${upper(practiceCard, faceText(practiceCard))}<div class="tear"></div><div class="stub"><p data-hint>Swipe the ticket toward your call, or tap a sign. This one is practice.</p><div class="ghost" data-ghost></div></div></div>
+          ${signs(practiceCard)}${tourNav(false)}` };
+      case "result":
+        return { surface: MODEL.surfaceOfOutcome[tour.record.outcome], html: tourResult(top) };
+      case "ways-out":
+        return { surface: "asking", html: `${top}
+          <div class="head-row"><h1 class="big long">Two ways out.</h1>${rookie("up", 84)}</div>
+          <div class="tour-items">
+            <div class="tour-item"><span class="quiet">It depends</span><p>The answer turns on something the case leaves out. It goes to the area owner as an exception, with a note if you like.</p></div>
+            <div class="tour-item"><span class="quiet">Not my area</span><p>The case moves on to someone else, and it still counts for your streak.</p></div>
+          </div>
+          <p class="fine">Both are on every case, and neither costs you anything.</p>
+          ${gap}${tourNav()}` };
+      case "path":
+        return { surface: "report", html: `${top}
+          <div class="head-row"><h1 class="big long">Where your answer goes.</h1>${rookie("happy", 84)}</div>
+          <ol class="tour-path">
+            <li><b>You answer.</b> Nothing changes yet.</li>
+            <li><b>The area owner reviews it.</b> Nobody reviews their own catch.</li>
+            <li><b>A modeller edits the rule.</b> This is the only step that changes it.</li>
+          </ol>
+          <div class="panel"><span>In this demo</span><b>Answers stay on this device, and nobody reviews them yet.</b></div>
+          ${gap}${tourNav()}` };
+      case "counts":
+        return { surface: "report", html: `${top}
+          <div class="head-row"><h1 class="big long">What counts.</h1>${rookie("happy", 84)}</div>
+          <div class="tour-items">
+            <div class="tour-item"><div class="tour-chips">${TITLES.map((t) => `<span class="title-chip">${esc(t)}</span>`).join("")}</div><p>Titles come from upheld catches and check cards. Answering more earns nothing, and a title is never lost.</p></div>
+            <div class="tour-item">${pips(1)}<p>One case a week keeps your streak. You hold ${MODEL.passLimit} standby passes for weeks off.</p></div>
+            <div class="tour-item"><p>Some cards are rules we changed on purpose, to check for care.</p></div>
+          </div>
+          ${gap}${tourNav()}` };
+      default: {
+        const atStart = state.session.phase === PHASE.INTRO;
+        const label = atStart ? `Start ${esc(DECK.shifts[state.shift].name.toLowerCase())}` : "Back to my shift";
+        return { surface: "asking", html: `${top}
+          <div class="head-row"><h1 class="big long">Ready, Coach?</h1>${rookie("proud", 92)}</div>
+          <p class="sub">A shift is ${state.session.length} cases, about 2 minutes, with no timer.</p>
+          <p class="fine">On any result, Behind this card shows the real rule, and you can run a check on your phone.</p>
+          ${gap}<button class="main" data-tour-start>${label}</button>
+          <div class="row"><button class="link" data-tour-back>Back</button>${atStart ? '<button class="link" data-tour-leave>Not yet</button>' : ""}</div>` };
+      }
+    }
+  }
+
   let shownAt = Date.now();
 
+  function drawTour() {
+    const view = renderTour();
+    app.dataset.at = "tour";
+    app.dataset.tour = tourStep();
+    app.dataset.surface = view.surface;
+    delete app.dataset.card;
+    delete app.dataset.lean;
+    if (tourStep() === "result") app.dataset.outcome = tour.record.outcome; else delete app.dataset.outcome;
+    app.innerHTML = view.html;
+    app.scrollTop = 0;
+    live.textContent = tourStep() === "case" ? `${practiceCard.say} ${faceText(practiceCard)}` : (app.querySelector("h1") || {}).textContent || "";
+    const swipe = app.querySelector("[data-swipe]");
+    if (swipe) attachSwipe(swipe, practiceCard);
+    if (usingKeys) (app.querySelector("[data-tour-next], [data-tour-start]") || { focus() {} }).focus();
+  }
+
   function render() {
+    if (tour) {
+      drawTour();
+      return;
+    }
+    delete app.dataset.tour;
     const s = state.session;
     let html;
     let at;
@@ -393,7 +553,7 @@
 
   function choose(card, choiceId, side) {
     const choice = card.choices.find((c) => c.id === choiceId);
-    const go = () => answer(card, { choice: choiceId, response: choice.response, side }, EVENT.CALL);
+    const go = () => (tour ? tourAnswered(card, choice) : answer(card, { choice: choiceId, response: choice.response, side }, EVENT.CALL));
     const stub = app.querySelector(".stub");
     if (!stub || app.dataset.landing) return;
     app.dataset.landing = "true";
@@ -549,6 +709,18 @@
   app.addEventListener("click", (e) => {
     const target = e.target.closest("button");
     if (!target) return;
+    if (target.dataset.tour !== undefined) {
+      startTour();
+      return;
+    }
+    if (tour) {
+      if (target.dataset.tourNext !== undefined) tourMove(1);
+      else if (target.dataset.tourBack !== undefined) tourMove(-1);
+      else if (target.dataset.tourLeave !== undefined) leaveTour(false);
+      else if (target.dataset.tourStart !== undefined) leaveTour(true);
+      else if (target.dataset.choice) choose(practiceCard, target.dataset.choice, target.dataset.side || null);
+      return;
+    }
     const card = state.session.phase === PHASE.ASKING || state.session.phase === PHASE.REVEALED ? currentCard() : null;
     if (target.dataset.start !== undefined) {
       buzz(18);
@@ -611,11 +783,13 @@
   document.addEventListener("keydown", (e) => {
     usingKeys = true;
     if (sheet.open || e.target.matches?.("input, textarea")) return;
-    if (state.session.phase !== PHASE.ASKING) return;
-    const card = currentCard();
+    if (tour ? tourStep() !== "case" : state.session.phase !== PHASE.ASKING) return;
+    const card = tour ? practiceCard : currentCard();
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       const button = app.querySelector(`[data-side="${e.key === "ArrowLeft" ? "left" : "right"}"]`);
       if (button) choose(card, button.dataset.choice, button.dataset.side);
+    } else if (tour) {
+      /* The practice case has only the two signs. */
     } else if (/^[1-4]$/.test(e.key)) {
       const button = app.querySelector(`[data-key="${e.key}"]`);
       if (button) choose(card, button.dataset.choice, null);
@@ -630,7 +804,16 @@
 
   (async function start() {
     engine = await loadEngine();
+    let returning = false;
+    try {
+      returning = localStorage.getItem(STORE) !== null;
+    } catch {
+      /* As above. */
+    }
     restore();
+    // An expert's first visit starts with the tour. Test links name a seed or ask for a fresh game.
+    const firstVisit = !returning && !tourSeen() && !params.has("seed") && !params.has("fresh");
+    if (params.has("tour") || firstVisit) tour = { step: 0, record: null };
     if (state.session.phase === PHASE.ASKING || state.session.phase === PHASE.REVEALED) skipFollowUps();
     render();
     window.__game = { engine: engine.name, selfCheck, get state() { return state; }, answersJson };

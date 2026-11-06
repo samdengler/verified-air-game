@@ -524,6 +524,58 @@ window.DECK = {
      "response": 0
     }
    ]
+  },
+  {
+   "id": "practice-before-expiry",
+   "kind": "predict",
+   "area": "Practice case",
+   "label": "Accepting an offer before its expiry",
+   "kindCode": 0,
+   "question": "What happens?",
+   "say": "Practice time. What do I do, Coach?",
+   "behind": {
+    "lean": [
+     "Rules.OfferOrder.acceptBeforeExpiry"
+    ],
+    "value": "Except.ok { id := \"ORD-1\",\n  fromOffer := \"OFF-1\",\n  items := [{ id := \"ORD-1-OI-1\",\n              fromOfferItem := \"OI-1\",\n              price := { amount := 20000, currency := Rules.Core.Currency.USD },\n              delivery := Rules.OfferOrder.DeliveryState.ready },\n            { id := \"ORD-1-OI-2\",\n              fromOfferItem := \"OI-2\",\n              price := { amount := 4500, currency := Rules.Core.Currency.USD },\n              delivery := Rules.OfferOrder.DeliveryState.ready }],\n  price := { amount := 24500, currency := Rules.Core.Currency.USD },\n  createdAt := { epochSeconds := 1793102340 } }",
+    "link": "https://samdengler.github.io/verified-air/review/"
+   },
+   "reveal": {
+    "then": "An order is created with both items, priced at 245.00 USD.",
+    "rule": {
+     "id": "OO-001.4",
+     "text": "When a customer accepts an unexpired offer with at least one item and every item priced in the offer's currency, the system shall create an order.",
+     "status": "example only"
+    }
+   },
+   "case": "An offer is valid until 12:00 UTC. The customer accepts it at 11:59 UTC.",
+   "choices": [
+    {
+     "id": "created",
+     "label": "Create the order",
+     "model": true,
+     "response": 0,
+     "stamp": "ORDERED"
+    },
+    {
+     "id": "rejected",
+     "label": "Reject it as expired",
+     "response": 1,
+     "stamp": "REJECTED"
+    }
+   ],
+   "short": "The customer accepts the offer a minute before it expires.",
+   "fields": [
+    {
+     "label": "Valid until",
+     "value": "12:00"
+    },
+    {
+     "label": "Accepted",
+     "value": "11:59"
+    }
+   ]
   }
- ]
+ ],
+ "practice": "practice-before-expiry"
 };

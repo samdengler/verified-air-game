@@ -36,6 +36,23 @@ test("the page keeps no copy of the rules", () => {
   assert.match(app, /"follow_up_shown"/);
 });
 
+test("the tour practises on a case that is in no shift", () => {
+  assert.ok(DECK.practice, "the deck names a practice case");
+  assert.ok(DECK.cards.some((card) => card.id === DECK.practice), "the practice case is in the deck");
+  for (const shift of DECK.shifts) assert.ok(!shift.cards.includes(DECK.practice), `${shift.name} would give it away`);
+});
+
+test("every theorem the strategy doc names exists in the model", () => {
+  const { readdirSync } = require("node:fs");
+  const root = join(__dirname, "..", "model");
+  const files = readdirSync(root, { recursive: true }).filter((name) => String(name).endsWith(".lean") && !String(name).includes(".lake"));
+  const lean = files.map((name) => readFileSync(join(root, String(name)), "utf8")).join("\n");
+  const doc = readFileSync(join(__dirname, "..", "docs", "strategy.md"), "utf8");
+  const named = [...doc.matchAll(/`([a-z]+(?:_[a-z]+)+)`/g)].map((m) => m[1]);
+  assert.ok(named.length > 20, "the doc names its guards");
+  for (const name of new Set(named)) assert.match(lean, new RegExp(`theorem ${name}\\b`), `${name} is not a theorem in the model`);
+});
+
 test("every card kind has a surface, and every shift fits the model's limit", () => {
   for (const card of DECK.cards) {
     assert.ok(MODEL.askingSurface[card.kindCode], `${card.id} has no surface`);

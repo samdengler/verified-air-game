@@ -4,7 +4,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object Tokens {
-    val deltaBlue = Color(0xFF003268)
+    val airlineBlue = Color(0xFF003268)
     val navy = Color(0xFF00214A)
     val navyRaised = Color(0xFF0B3A75)
     val bright = Color(0xFF0C5FB8)

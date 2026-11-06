@@ -14,7 +14,7 @@ def hex2 (n : Nat) : String :=
 
 def Design.Color.hex (c : Color) : String := s!"#{hex2 c.r}{hex2 c.g}{hex2 c.b}"
 
-/-- `delta-blue` as `deltaBlue`. -/
+/-- `airline-blue` as `airlineBlue`. -/
 def camel (s : String) : String :=
   match s.splitOn "-" with
   | [] => s

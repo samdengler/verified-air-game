@@ -49,7 +49,7 @@ button { font: inherit; cursor: pointer; }
 .ticket:not(.dragging) { transition: transform var(--motion-card-exit); }
 .ticket.leaving { transform: translateX(-120%) rotate(-6deg); }
 .upper { flex: 1 0 auto; padding: 18px 20px 14px; display: flex; flex-direction: column; gap: 10px; }
-.tag { align-self: flex-start; background: var(--color-tint); color: var(--color-delta-blue); border-radius: 11px; padding: 5px 11px; font-size: var(--type-label); font-weight: 750; }
+.tag { align-self: flex-start; background: var(--color-tint); color: var(--color-airline-blue); border-radius: 11px; padding: 5px 11px; font-size: var(--type-label); font-weight: 750; }
 .demo-flag { color: var(--color-mute); font-size: var(--type-label); font-weight: 650; }
 .case-text { font-size: min(var(--type-case), 6.6vw); line-height: 1.14; font-weight: 750; letter-spacing: -0.3px; }
 .fields { margin-top: auto; display: flex; justify-content: space-between; gap: 8px; }
@@ -60,7 +60,7 @@ button { font: inherit; cursor: pointer; }
 .bars { display: flex; flex-direction: column; gap: 4px; }
 .bars div { display: flex; gap: 3px; }
 .bars i { display: block; height: 14px; border-radius: 4px; }
-.bars .paid { background: var(--color-delta-blue); }
+.bars .paid { background: var(--color-airline-blue); }
 .bars .asked { background: var(--color-red); }
 .tear { flex: none; position: relative; margin: 0 22px; border-top: 3px dotted var(--color-mute); }
 .tear::before, .tear::after { content: ""; position: absolute; top: -14px; width: 26px; height: 26px; border-radius: 50%; background: var(--ground); }
@@ -76,7 +76,7 @@ button { font: inherit; cursor: pointer; }
   font-family: "Saira Stencil One", Impact, sans-serif; font-size: min(44px, 10.5vw); line-height: 1.05; letter-spacing: 1px;
   white-space: nowrap; color: var(--color-red); transform: rotate(-5deg);
 }
-.stamp.blue { color: var(--color-delta-blue); }
+.stamp.blue { color: var(--color-airline-blue); }
 .stamp.small { font-size: min(27px, 6.6vw); border-width: 4px; white-space: normal; text-align: center; }
 .stamp-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .stamp.landing { animation: land var(--motion-stamp-landing) ease-in both; }
@@ -94,7 +94,7 @@ button { font: inherit; cursor: pointer; }
 .sign.right { align-items: flex-end; text-align: right; }
 .sign svg { flex: none; }
 .sign svg path { fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
-#app[data-surface="consequence"] .sign, #app[data-surface="consequence"] .option { background: var(--color-delta-blue); color: var(--color-white); box-shadow: 0 6px 0 var(--color-navy); }
+#app[data-surface="consequence"] .sign, #app[data-surface="consequence"] .option { background: var(--color-airline-blue); color: var(--color-white); box-shadow: 0 6px 0 var(--color-navy); }
 #app[data-lean="left"] .sign.left, #app[data-lean="right"] .sign.right { background: var(--color-red); color: var(--color-white); border-color: var(--color-white); transform: scale(1.04); }
 .options { flex: none; display: flex; flex-direction: column; gap: 8px; }
 .option { min-height: 50px; border: 0; border-radius: 16px; padding: 8px 16px; text-align: left; background: var(--color-white); color: var(--color-navy); box-shadow: 0 5px 0 var(--color-navy-raised); font-size: min(var(--type-body), 4.5vw); line-height: 1.14; font-weight: 750; }
@@ -130,7 +130,7 @@ a.main { display: flex; align-items: center; justify-content: center; text-decor
 }
 #app[data-surface="possible-catch"] .main, #app[data-surface="same-call"] .main { background: var(--color-navy); box-shadow: none; }
 #app[data-surface="consequence"] .main { background: var(--color-navy); border-color: var(--color-navy); box-shadow: none; }
-.link { flex: none; min-height: var(--touch-target); border: 0; background: transparent; color: inherit; font-size: var(--type-label); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.link { flex: none; min-height: var(--touch-target); min-width: var(--touch-target); border: 0; background: transparent; color: inherit; font-size: var(--type-label); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
 /* Home */
 .top { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -148,7 +148,7 @@ a.main { display: flex; align-items: center; justify-content: center; text-decor
 .stop.even { left: 0; }
 .stop.odd { right: 0; flex-direction: row-reverse; text-align: right; }
 .stop .node { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--color-white); display: grid; place-items: center; }
-.stop .node::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--color-delta-blue); }
+.stop .node::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--color-airline-blue); }
 .stop.here .node { width: 54px; height: 54px; background: var(--color-red); border: 3px solid var(--color-white); }
 .stop.here .node::after { display: none; }
 .stop.here .node svg { display: block; fill: var(--color-white); }
@@ -157,6 +157,15 @@ a.main { display: flex; align-items: center; justify-content: center; text-decor
 .stop span { font-size: var(--type-label); font-weight: 550; }
 .fine { flex: none; font-size: var(--type-label); line-height: 1.25; font-weight: 500; }
 .row { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+/* Tour */
+.tour-gap { flex: 1 1 auto; }
+.tour-items { flex: none; display: flex; flex-direction: column; gap: 14px; }
+.tour-item { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; font-size: min(var(--type-body), 4.4vw); line-height: 1.24; font-weight: 600; }
+.tour-item .quiet { min-height: 0; display: inline-block; padding: 6px 14px; font-weight: 700; }
+.tour-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tour-path { flex: none; margin: 0; padding: 0 0 0 24px; display: flex; flex-direction: column; gap: 12px; font-size: min(var(--type-body), 4.4vw); line-height: 1.24; font-weight: 600; }
+.tour-path b { display: block; font-size: min(19px, 4.8vw); font-weight: 800; }
 
 /* Report */
 .tiles { flex: none; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -191,6 +200,11 @@ dialog a { display: inline-flex; align-items: center; min-height: var(--touch-ta
   .map > svg, .stop:not(.here) { display: none; }
   .stop.here { top: 50% !important; }
   .say .rookie { width: 60px; height: 75px; }
+  #app[data-tour] .head-row .rookie { width: 60px; height: 75px; }
+  #app[data-tour] .panel { padding: 9px 13px; }
+  .tour-path { gap: 7px; }
+  .tour-items { gap: 9px; }
+  #app[data-tour="result"] .compare div { padding: 6px 12px; }
   .upper { padding: 12px 16px 10px; gap: 7px; }
   .ticket:not(.result) .tag { display: none; }
   .stub { min-height: 46px; padding: 6px 16px 8px; }

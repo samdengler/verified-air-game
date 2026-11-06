@@ -2,6 +2,8 @@
 
 A phone game for reviewing the [Verified Air](https://github.com/samdengler/verified-air) rules. You coach Rookie, a little jet and new hire who follows the rulebook to the letter. Each case takes a swipe, and the biggest moment in the game is catching the rulebook out.
 
+[How Gate Check applies the strategy](docs/strategy.md) explains each mechanic, where it comes from, and whether it is built.
+
 The game has its own Lean model. The screens, the Kiro specs, the design tokens and the tests are all built from it. It is a proof of concept, not affiliated with IATA.
 
 ![Five screens: today's shift, a case, a possible catch, the customer has paid for nothing, and the shift report](docs/screens.png)
@@ -14,6 +16,8 @@ The game is live at <https://gatecheck.dengler.io/>. To run it yourself:
 npm start
 # then open http://<this computer's address>:8010 on a phone on the same Wi-Fi
 ```
+
+A first visit starts with a short tour, which practises on a real rule and records nothing. It is on the home screen afterwards, and `?tour` opens it directly.
 
 Swipe a ticket toward your call, or tap a sign. On a keyboard, use the left and right arrows, 1 to 4 for a list of choices, D for "It depends" and N for "Not my area".
 
@@ -88,4 +92,3 @@ A push does not publish. Run `scripts/deploy.sh --site-only` after a change to `
 - **Crews are modelled and not built.**
 - **Nothing has run on a real phone in testing.** WebKit in a container is not Safari on an iPhone.
 
-The colours follow Delta's blue and red, as listed by third-party palette sites. No screen carries Delta's name or logo.

@@ -2,7 +2,7 @@
 import SwiftUI
 
 enum Tokens {
-    static let deltaBlue = Color(red: 0 / 255, green: 50 / 255, blue: 104 / 255)
+    static let airlineBlue = Color(red: 0 / 255, green: 50 / 255, blue: 104 / 255)
     static let navy = Color(red: 0 / 255, green: 33 / 255, blue: 74 / 255)
     static let navyRaised = Color(red: 11 / 255, green: 58 / 255, blue: 117 / 255)
     static let bright = Color(red: 12 / 255, green: 95 / 255, blue: 184 / 255)
